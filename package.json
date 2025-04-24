@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "npx next build"
   },
   "dependencies": {
     "autoprefixer": "^10.4.16",
@@ -27,7 +28,7 @@
   "devDependencies": {
     "@types/node": "^20.17.30",
     "@types/react": "^18.3.20",
-    "@types/react-dom": "^19.1.2",
+    "@types/react-dom": "^18.2.23",
     "eslint": "^8.52.0",
     "eslint-config-next": "^14.0.0",
     "typescript": "^5.2.2"
