@@ -18,6 +18,10 @@ const nextConfig = {
   output: 'standalone',
   poweredByHeader: false,
   compress: true,
+  // Отключаем оптимизацию для favicon, так как мы используем SVG и OG-image
+  experimental: {
+    optimizePackageImports: [''],
+  },
 };
 
 module.exports = nextConfig; 

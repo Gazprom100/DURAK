@@ -1,6 +1,7 @@
 import './globals.css';
 import { Inter, Chakra_Petch } from 'next/font/google';
 import { Providers } from './providers';
+import { Metadata } from 'next';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const chakraPetch = Chakra_Petch({ 
@@ -9,9 +10,14 @@ const chakraPetch = Chakra_Petch({
   variable: '--font-chakra-petch'
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'DURAK - Современная карточная игра',
   description: 'Многопользовательская игра "Дурак" с современным дизайном и системой бонусов',
+  icons: {
+    icon: [
+      { url: '/favicon.svg' }
+    ]
+  },
 };
 
 export default function RootLayout({
