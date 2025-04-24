@@ -2,8 +2,18 @@ services:
   - type: web
     name: durak
     env: node
+    plan: starter
     buildCommand: npm install --legacy-peer-deps && npm run build
     startCommand: npm start
+    healthCheckPath: /
+    previewCommands:
+      - command: npm run build
+        type: preview
+    staticPublishPath: ./public
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=86400
     envVars:
       - key: NODE_ENV
         value: production

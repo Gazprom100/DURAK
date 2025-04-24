@@ -3,7 +3,8 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: [''],
+    domains: ['i.pravatar.cc'],
+    unoptimized: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
@@ -13,6 +14,10 @@ const nextConfig = {
     // Это позволит сделать успешный деплой даже если есть ошибки типов
     ignoreBuildErrors: true,
   },
+  // Оптимизация для Render
+  output: 'standalone',
+  poweredByHeader: false,
+  compress: true,
 };
 
 module.exports = nextConfig; 
