@@ -1,5 +1,6 @@
 import './globals.css';
 import { Inter, Chakra_Petch } from 'next/font/google';
+import { Providers } from './providers';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const chakraPetch = Chakra_Petch({ 
@@ -21,9 +22,11 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={`${inter.variable} ${chakraPetch.variable} font-sans bg-background-dark text-text-light min-h-screen`}>
-        <main className="min-h-screen">
-          {children}
-        </main>
+        <Providers>
+          <main className="min-h-screen">
+            {children}
+          </main>
+        </Providers>
       </body>
     </html>
   );

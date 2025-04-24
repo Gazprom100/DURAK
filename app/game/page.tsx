@@ -1,5 +1,8 @@
 'use client';
 
+// Указываем Next.js, что эта страница должна быть динамической, а не статической
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
