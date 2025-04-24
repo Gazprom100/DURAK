@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --neon-blue: 15 224 255;
+    --neon-pink: 255 54 245;
+    --neon-green: 20 241 149;
+  }
+  
+  body {
+    @apply antialiased bg-gradient-to-b from-background-dark to-[#141926];
+    background-size: 100% 100%;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl bg-background-card border border-primary/20 p-5 relative overflow-hidden transition-all duration-300;
+  }
+  
+  .card:hover {
+    @apply shadow-neon-blue transform-gpu -translate-y-1;
+  }
+  
+  .button-primary {
+    @apply bg-primary text-background-dark font-display font-bold py-3 px-6 rounded-md shadow-neon-blue transform-gpu transition-all duration-300 hover:shadow-[0_0_20px_5px_rgba(15,224,255,0.7)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary/50;
+  }
+  
+  .button-secondary {
+    @apply bg-secondary text-background-dark font-display font-bold py-3 px-6 rounded-md shadow-neon-pink transform-gpu transition-all duration-300 hover:shadow-[0_0_20px_5px_rgba(255,54,245,0.7)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-secondary/50;
+  }
+  
+  .button-accent {
+    @apply bg-accent text-background-dark font-display font-bold py-3 px-6 rounded-md shadow-neon-green transform-gpu transition-all duration-300 hover:shadow-[0_0_20px_5px_rgba(20,241,149,0.7)] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-accent/50;
+  }
+  
+  .container-glow {
+    @apply relative;
+  }
+  
+  .container-glow::before {
+    content: '';
+    @apply absolute -inset-0.5 bg-gradient-to-r from-primary via-secondary to-accent rounded-lg blur-sm opacity-75;
+    z-index: -1;
+  }
+} 
