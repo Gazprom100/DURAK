@@ -46,4 +46,243 @@
     @apply absolute -inset-0.5 bg-gradient-to-r from-primary via-secondary to-accent rounded-lg blur-sm opacity-75;
     z-index: -1;
   }
+  
+  /* Стили для раскиданных карт с криптовалютами */
+  .scattered-cards {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+  
+  /* Создаем псевдоэлементы для каждой карты */
+  .scattered-cards::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.3;
+    z-index: -1;
+  }
+  
+  /* Bitcoin карта */
+  .crypto-card-btc {
+    position: absolute;
+    width: 150px;
+    height: 210px;
+    background: #1a1e2a;
+    border-radius: 10px;
+    border: 2px solid rgba(15, 224, 255, 0.3);
+    box-shadow: 0 0 15px rgba(15, 224, 255, 0.4);
+    transform: rotate(-10deg);
+    left: calc(20% - 100px);
+    top: calc(30% - 50px);
+    z-index: 1;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .crypto-card-btc::before {
+    content: 'BTC';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: bold;
+    font-size: 18px;
+    color: #F7931A;
+  }
+  
+  .crypto-card-btc::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23F7931A"><path d="M12 0C5.383 0 0 5.383 0 12s5.383 12 12 12 12-5.383 12-12S18.617 0 12 0zm4.845 15.77c-.209.84-1.33 1.947-2.698 1.947h-7.194l.562-2.313.035-.015h6.586c.655 0 1.348-.315 1.527-.791.126-.335.04-.842-.459-1.015l-5.514-1.924-.434-.14.639-2.387.039-.062 5.319 1.857c1.439.502 2.166 1.919 1.592 3.344zm-2.159-6.599l-5.227-1.779-.434-.14.559-2.26.04-.016h5.038c.674 0 1.395-.315 1.581-.79.126-.337.04-.843-.458-1.016-1.277-.445-5.604-1.957-5.604-1.957l.56-2.314H16.3c1.368 0 2.488 1.107 2.697 1.947.574 1.425-.152 2.842-1.592 3.344l-2.72.981z"/></svg>') center/contain no-repeat;
+  }
+
+  /* Ethereum карта */
+  .crypto-card-eth {
+    position: absolute;
+    width: 150px;
+    height: 210px;
+    background: #1a1e2a;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 54, 245, 0.3);
+    box-shadow: 0 0 15px rgba(255, 54, 245, 0.4);
+    transform: rotate(15deg);
+    right: calc(20% - 50px);
+    top: calc(20% - 80px);
+    z-index: 1;
+    overflow: hidden;
+  }
+  
+  .crypto-card-eth::before {
+    content: 'ETH';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: bold;
+    font-size: 18px;
+    color: #627EEA;
+  }
+  
+  .crypto-card-eth::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23627EEA"><path d="M11.944 0L11.878 0.226V16.414L11.944 16.48L19.2 12.24L11.944 0Z" /><path d="M11.944 0L4.686 12.24L11.944 16.48V8.832V0Z" fill-opacity="0.8"/><path d="M11.944 17.864L11.905 17.911V23.511L11.944 23.626L19.206 13.626L11.944 17.864Z" /><path d="M11.944 23.626V17.864L4.686 13.626L11.944 23.626Z" fill-opacity="0.8"/><path d="M11.944 16.48L19.2 12.24L11.944 8.832V16.48Z" fill-opacity="0.5"/><path d="M4.686 12.24L11.944 16.48V8.832L4.686 12.24Z" fill-opacity="0.5"/></svg>') center/contain no-repeat;
+  }
+
+  /* USDT карта */
+  .crypto-card-usdt {
+    position: absolute;
+    width: 150px;
+    height: 210px;
+    background: #1a1e2a;
+    border-radius: 10px;
+    border: 2px solid rgba(20, 241, 149, 0.3);
+    box-shadow: 0 0 15px rgba(20, 241, 149, 0.4);
+    transform: rotate(-5deg);
+    right: calc(10% - 50px);
+    bottom: calc(30% - 100px);
+    z-index: 1;
+    overflow: hidden;
+  }
+  
+  .crypto-card-usdt::before {
+    content: 'USDT';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: bold;
+    font-size: 18px;
+    color: #26A17B;
+  }
+  
+  .crypto-card-usdt::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2326A17B"><path d="M12 0C5.373 0 0 5.373 0 12C0 18.627 5.373 24 12 24C18.627 24 24 18.627 24 12C24 5.373 18.627 0 12 0ZM12.95 14.481H17.061V15.437H10.734V14.481H10.739V14.481H14.85V13.988H10.739V13.022H14.85V12.508C14.85 12.508 13.11 12.508 12.741 12.508C9.571 12.508 9.38 10.5 9.38 10.5V7.428H10.734V10.416C10.734 10.416 10.75 11.388 12.286 11.388H17.061V6.521H15.707C15.707 6.521 14.98 6.604 14.849 7.387H12.95V6.426C12.95 6.426 13.226 5.044 15.124 5.044H18.435V16.393H15.124C15.124 16.393 13.264 16.392 12.95 14.481V14.481ZM6.86 16.392H5.565V10.163L4.5 10.518V9.324L6.86 8.471V16.392Z"/></svg>') center/contain no-repeat;
+  }
+
+  /* BNB карта */
+  .crypto-card-bnb {
+    position: absolute;
+    width: 150px;
+    height: 210px;
+    background: #1a1e2a;
+    border-radius: 10px;
+    border: 2px solid rgba(15, 224, 255, 0.3);
+    box-shadow: 0 0 15px rgba(15, 224, 255, 0.4);
+    transform: rotate(8deg);
+    left: calc(30% - 150px);
+    bottom: calc(40% - 120px);
+    z-index: 1;
+    overflow: hidden;
+  }
+  
+  .crypto-card-bnb::before {
+    content: 'BNB';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: bold;
+    font-size: 18px;
+    color: #F3BA2F;
+  }
+  
+  .crypto-card-bnb::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23F3BA2F"><path d="M12 0C5.373 0 0 5.373 0 12C0 18.627 5.373 24 12 24C18.627 24 24 18.627 24 12C24 5.373 18.627 0 12 0ZM5.636 12L7.572 10.081L9.508 12L7.572 13.919L5.636 12ZM12 18.348L5.636 12L7.572 10.081L12 14.495L16.428 10.081L18.364 12L12 18.348ZM14.428 13.919L12.492 12L14.428 10.081L16.364 12L14.428 13.919ZM12 9.505L7.572 5.091L5.636 7.01L12 13.39L18.364 7.01L16.428 5.091L12 9.505Z"/></svg>') center/contain no-repeat;
+  }
+
+  /* SOL карта */
+  .crypto-card-sol {
+    position: absolute;
+    width: 150px;
+    height: 210px;
+    background: #1a1e2a;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 54, 245, 0.3);
+    box-shadow: 0 0 15px rgba(255, 54, 245, 0.4);
+    transform: rotate(-12deg);
+    right: calc(40% - 150px);
+    top: calc(60% - 100px);
+    z-index: 1;
+    overflow: hidden;
+  }
+  
+  .crypto-card-sol::before {
+    content: 'SOL';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: bold;
+    font-size: 18px;
+    color: #00FFA3;
+  }
+  
+  .crypto-card-sol::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 397.7 311.7" fill="%2300FFA3"><linearGradient id="a" gradientUnits="userSpaceOnUse" x1="360.8791" y1="351.4553" x2="141.213" y2="-69.2936" gradientTransform="matrix(1 0 0 -1 0 314)"><stop offset="0" stop-color="%23fff" /><stop offset="1" stop-color="%2300FFA3" /></linearGradient><path d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z" fill="%23fff" /><path d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z" fill="%2300FFA3" /><path d="M333.9 120.9c-2.4-2.4-5.7-3.8-9.2-3.8H7.4c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.8-62.7z" fill="%231A1A1A" /></svg>') center/contain no-repeat;
+  }
+
+  /* Стили для мерцающего текста */
+  .glow-text {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .glow-text::before {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    filter: blur(8px);
+  }
+
+  /* Стили кнопок */
+  .btn-primary {
+    @apply bg-primary/90 hover:bg-primary text-background-dark font-bold py-2 px-4 rounded shadow-neon-blue hover:shadow-[0_0_15px_4px_rgba(15,224,255,0.7)] transition-all duration-300;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary/90 hover:bg-secondary text-background-dark font-bold py-2 px-4 rounded shadow-neon-pink hover:shadow-[0_0_15px_4px_rgba(255,54,245,0.7)] transition-all duration-300;
+  }
+  
+  .btn-sm {
+    @apply py-1 px-3 text-sm;
+  }
 } 

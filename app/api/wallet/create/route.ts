@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
+import { authOptions, getUserPrivateKey } from '@/app/api/auth/[...nextauth]/auth';
 import { createWallet } from '@/utils/decimal';
+import { getUserByName, updateUser } from '@/utils/user-store';
 
 // API-маршрут для создания кошелька пользователя
 
@@ -31,25 +32,23 @@ export async function POST(req: NextRequest) {
     // Создаем мок-кошелек для работы в серверном окружении
     const wallet = await createWallet();
     
-    // Добавляем информацию о кошельке в "базу данных" (в реальном приложении это будет БД)
-    // Для этого вызываем специальный API-маршрут для обновления пользователя
-    const updateResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/user/update`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Передаем текущую сессию через заголовки для аутентификации на сервере
-        'x-auth-token': session.user.id,
-      },
-      body: JSON.stringify({
-        walletAddress: wallet.address,
-        walletCreated: true,
-        privateKey: wallet.privateKey, // В реальном приложении этот ключ должен быть зашифрован
-      }),
-    });
-
-    if (!updateResponse.ok) {
-      throw new Error('Failed to update user with wallet information');
+    // Получаем пользователя по имени
+    const username = session.user.name || '';
+    const user = getUserByName(username);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found', success: false }, 
+        { status: 404 }
+      );
     }
+    
+    // Напрямую обновляем данные пользователя в хранилище
+    updateUser(user.id, {
+      walletAddress: wallet.address,
+      walletCreated: true,
+      privateKey: wallet.privateKey, // В реальном приложении этот ключ должен быть зашифрован
+    });
 
     return NextResponse.json({
       success: true,
