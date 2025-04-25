@@ -11,6 +11,9 @@ declare module "next-auth" {
       wins?: number;
       losses?: number;
       gamesPlayed?: number;
+      walletAddress?: string;
+      walletBalance?: string;
+      walletCreated?: boolean;
     } & DefaultSession["user"];
   }
 } 

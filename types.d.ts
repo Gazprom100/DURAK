@@ -17,6 +17,7 @@ export type Card = {
   suit: CardSuit;
   rank: CardRank;
   value: number;
+  faceDown?: boolean;
 };
 
 // Player types
@@ -48,6 +49,11 @@ export type GameState = {
   gameCompleted: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  // Betting related fields
+  hasBet?: boolean;
+  betAmount?: string;
+  betTxHash?: string;
+  betPaid?: boolean;
 };
 
 // Bonus types
@@ -56,6 +62,18 @@ export type Bonus = {
   name: string;
   description: string;
   isAvailable: boolean;
+};
+
+// Wallet types
+export type WalletTransaction = {
+  id: string;
+  type: 'deposit' | 'withdrawal' | 'bet' | 'win';
+  amount: string;
+  timestamp: Date;
+  txHash?: string;
+  status: 'pending' | 'completed' | 'failed';
+  fromAddress?: string;
+  toAddress?: string;
 };
 
 // Socket event types

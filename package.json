@@ -8,10 +8,17 @@
     "build": "npx next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "npx next build"
+    "postinstall": "npx next build",
+    "setup": "bash setup.sh",
+    "init-wallets": "node scripts/init-wallets.js",
+    "check-wallet": "node scripts/check-wallet.js",
+    "fund-pool": "node scripts/fund-pool.js"
   },
   "dependencies": {
     "autoprefixer": "^10.4.16",
+    "axios": "^1.6.0",
+    "decimal-js-sdk": "^0.4.2",
+    "ethers": "^5.7.2",
     "framer-motion": "^10.18.0",
     "nanoid": "^5.1.5",
     "next": "^14.0.0",

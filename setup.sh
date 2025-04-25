@@ -8,6 +8,11 @@ npm install
 
 # Create essential directories if they don't exist
 mkdir -p public/images
+mkdir -p scripts
+
+# Initialize wallets
+echo "💰 Initializing DecimalChain wallets..."
+node scripts/init-wallets.js
 
 # Initialize git if not already initialized
 if [ ! -d ".git" ]; then

@@ -12,12 +12,15 @@ import { useRouter } from 'next/navigation';
 export default function Profile() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [bonuses, setBonuses] = useState([
-    { id: 1, name: 'Ещё одна карта', description: 'Возьмите дополнительную карту в начале игры', cost: 50, owned: false },
-    { id: 2, name: 'Выбор козыря', description: 'Возможность выбрать козырную масть', cost: 100, owned: false },
-    { id: 3, name: 'Знание карт', description: 'Видеть 2 карты противника', cost: 150, owned: false },
-    { id: 4, name: 'Защита', description: 'Одна карта не может быть побита противником', cost: 200, owned: false },
-  ]);
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawAddress, setWithdrawAddress] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [transactionStatus, setTransactionStatus] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -25,49 +28,126 @@ export default function Profile() {
     }
   }, [status, router]);
 
-  const purchaseBonus = (id: number) => {
-    setBonuses(prev => 
-      prev.map(bonus => 
-        bonus.id === id 
-          ? { ...bonus, owned: true } 
-          : bonus
-      )
-    );
+  const handleDeposit = async () => {
+    // In a real implementation, this would connect to a payment gateway
+    // For demo purposes, we'll just show a success message
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/wallet/deposit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ amount: depositAmount }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setTransactionStatus({ 
+          success: true, 
+          message: `Успешно пополнено на ${depositAmount} DEL` 
+        });
+        // Reset form
+        setDepositAmount('');
+        
+        // Refresh session to update wallet balance
+        router.refresh();
+      } else {
+        setTransactionStatus({ 
+          success: false, 
+          message: data.error || 'Произошла ошибка при пополнении кошелька' 
+        });
+      }
+    } catch (error) {
+      setTransactionStatus({ 
+        success: false, 
+        message: 'Произошла ошибка при пополнении кошелька' 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!withdrawAddress) {
+      setTransactionStatus({ 
+        success: false, 
+        message: 'Пожалуйста, укажите адрес кошелька для вывода' 
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/wallet/withdraw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          amount: withdrawAmount,
+          toAddress: withdrawAddress 
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setTransactionStatus({ 
+          success: true, 
+          message: `Успешно выведено ${withdrawAmount} DEL на адрес ${withdrawAddress.substring(0, 8)}...` 
+        });
+        // Reset form
+        setWithdrawAmount('');
+        setWithdrawAddress('');
+        
+        // Refresh session to update wallet balance
+        router.refresh();
+      } else {
+        setTransactionStatus({ 
+          success: false, 
+          message: data.error || 'Произошла ошибка при выводе средств' 
+        });
+      }
+    } catch (error) {
+      setTransactionStatus({ 
+        success: false, 
+        message: 'Произошла ошибка при выводе средств' 
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="text-4xl animate-pulse">🃏</div>
-        <p className="mt-4 text-text-muted">Загрузка профиля...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background-darker text-text-light">
+        <div className="loader"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="p-4 flex justify-between items-center border-b border-primary/20">
-        <Link href="/" className="font-display text-xl text-primary hover:text-primary/80 transition-colors">
-          ← На главную
-        </Link>
-        <button
-          onClick={() => signOut({ callbackUrl: '/' })}
-          className="text-text-muted hover:text-text-light transition-colors"
-        >
-          Выйти
-        </button>
-      </header>
-      
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-8 md:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile info */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="container-glow lg:col-span-1"
-          >
+    <div className="min-h-screen py-12 px-4 sm:px-6 bg-background-darker text-text-light">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-5xl mx-auto"
+      >
+        <div className="mb-10 flex items-center justify-between">
+          <h1 className="text-3xl md:text-4xl font-display font-bold text-text-light tracking-tight">
+            Профиль игрока
+          </h1>
+          <Link href="/" className="btn-secondary">
+            Вернуться на главную
+          </Link>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Левая колонка - информация пользователя */}
+          <div className="md:col-span-1">
             <div className="card h-full">
               <div className="flex flex-col items-center">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary mb-4">
@@ -102,78 +182,171 @@ export default function Profile() {
                     <span className="text-secondary">{session?.user?.losses || 0}</span>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Средняя колонка - кошелек и криптовалюта */}
+          <div className="md:col-span-2">
+            <div className="card overflow-hidden">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-text-light">Мой кошелек DecimalChain</h3>
+                  <button 
+                    onClick={() => setIsWalletOpen(!isWalletOpen)}
+                    className={`btn-secondary ${isWalletOpen ? 'bg-background-darker' : ''}`}
+                  >
+                    {isWalletOpen ? 'Скрыть' : 'Управление'}
+                  </button>
+                </div>
                 
-                <Link href="/game" className="button-primary mt-8 w-full text-center">
-                  Начать новую игру
+                <div className="bg-background-darker p-4 rounded-lg mb-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-text-muted">Баланс:</span>
+                    <span className="text-accent text-xl font-bold">
+                      {session?.user?.walletBalance || '0'} DEL
+                    </span>
+                  </div>
+                  <div className="mt-2 flex justify-between items-center">
+                    <span className="text-text-muted">Адрес кошелька:</span>
+                    <span className="text-text-light bg-background-dark px-3 py-1 rounded-md text-sm font-mono">
+                      {session?.user?.walletAddress ? 
+                        `${session.user.walletAddress.substring(0, 8)}...${session.user.walletAddress.substring(session.user.walletAddress.length - 8)}` : 
+                        'Кошелек не создан'}
+                    </span>
+                  </div>
+                </div>
+                
+                {transactionStatus && (
+                  <div className={`p-3 rounded-md ${transactionStatus.success ? 'bg-green-500/10 border border-green-500/30 text-green-500' : 'bg-red-500/10 border border-red-500/30 text-red-500'} text-sm mb-4`}>
+                    {transactionStatus.message}
+                  </div>
+                )}
+                
+                {isWalletOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                    className="border-t border-border-light mt-4 pt-4"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Пополнение кошелька */}
+                      <div className="bg-background-dark p-4 rounded-lg">
+                        <h4 className="text-text-light font-bold mb-3">Пополнить кошелек</h4>
+                        <div className="space-y-3">
+                          <div>
+                            <label htmlFor="deposit-amount" className="block text-sm font-medium text-text-muted mb-1">
+                              Сумма (DEL)
+                            </label>
+                            <div className="flex">
+                              <input
+                                id="deposit-amount"
+                                name="deposit-amount"
+                                type="number"
+                                value={depositAmount}
+                                onChange={(e) => setDepositAmount(e.target.value)}
+                                placeholder="0.0"
+                                min="0.1"
+                                step="0.1"
+                                className="appearance-none block w-full px-3 py-2 border border-primary/30 rounded-l-md bg-background-darker text-text-light placeholder-text-muted/50 focus:outline-none focus:ring-primary focus:border-primary"
+                              />
+                              <span className="inline-flex items-center px-3 py-2 rounded-r-md border border-l-0 border-primary/30 bg-background-darker text-text-muted text-sm">
+                                DEL
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={handleDeposit}
+                            disabled={!depositAmount || isLoading}
+                            className="w-full btn-primary mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isLoading ? 'Загрузка...' : 'Пополнить'}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Вывод средств */}
+                      <div className="bg-background-dark p-4 rounded-lg">
+                        <h4 className="text-text-light font-bold mb-3">Вывод средств</h4>
+                        <div className="space-y-3">
+                          <div>
+                            <label htmlFor="withdraw-amount" className="block text-sm font-medium text-text-muted mb-1">
+                              Сумма (DEL)
+                            </label>
+                            <div className="flex">
+                              <input
+                                id="withdraw-amount"
+                                name="withdraw-amount"
+                                type="number"
+                                value={withdrawAmount}
+                                onChange={(e) => setWithdrawAmount(e.target.value)}
+                                placeholder="0.0"
+                                min="0.1"
+                                step="0.1"
+                                className="appearance-none block w-full px-3 py-2 border border-primary/30 rounded-l-md bg-background-darker text-text-light placeholder-text-muted/50 focus:outline-none focus:ring-primary focus:border-primary"
+                              />
+                              <span className="inline-flex items-center px-3 py-2 rounded-r-md border border-l-0 border-primary/30 bg-background-darker text-text-muted text-sm">
+                                DEL
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <label htmlFor="withdraw-address" className="block text-sm font-medium text-text-muted mb-1">
+                              Адрес кошелька
+                            </label>
+                            <input
+                              id="withdraw-address"
+                              name="withdraw-address"
+                              type="text"
+                              value={withdrawAddress}
+                              onChange={(e) => setWithdrawAddress(e.target.value)}
+                              placeholder="0x..."
+                              className="appearance-none block w-full px-3 py-2 border border-primary/30 rounded-md bg-background-darker text-text-light placeholder-text-muted/50 focus:outline-none focus:ring-primary focus:border-primary"
+                            />
+                          </div>
+                          <button
+                            onClick={handleWithdraw}
+                            disabled={!withdrawAmount || !withdrawAddress || isLoading}
+                            className="w-full btn-secondary mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isLoading ? 'Загрузка...' : 'Вывести'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 p-4 rounded-lg bg-background-dark">
+                      <h4 className="text-text-light font-bold mb-3">О вашем кошельке</h4>
+                      <p className="text-text-muted text-sm">
+                        Ваш кошелек DecimalChain используется для хранения и управления криптовалютой DEL. 
+                        Вы можете пополнять его, делать ставки в играх и выводить выигрыши на внешние кошельки.
+                      </p>
+                      <p className="text-text-muted text-sm mt-2">
+                        При победе в игре вы получите весь пул ставок за вычетом комиссии платформы (20%).
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </div>
+            
+            {/* Последние транзакции будут добавлены в реальной имплементации */}
+            <div className="card mt-6">
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-text-light mb-4">Начать игру с криптовалютой</h3>
+                <p className="text-text-muted mb-4">
+                  Создайте новую игру со ставкой в DEL и сыграйте против других игроков. 
+                  Победитель забирает весь пул ставок!
+                </p>
+                <Link href="/game?bet=true" className="btn-primary block text-center">
+                  Создать игру со ставкой
                 </Link>
               </div>
             </div>
-          </motion.div>
-          
-          {/* Bonuses */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="container-glow lg:col-span-2"
-          >
-            <div className="card h-full">
-              <h2 className="text-2xl font-display font-bold text-text-light mb-6">
-                Бонусы и преимущества
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {bonuses.map((bonus) => (
-                  <div
-                    key={bonus.id}
-                    className={`p-4 rounded-lg border ${
-                      bonus.owned
-                        ? 'border-accent bg-accent/10'
-                        : 'border-primary/20 bg-background-dark'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-lg font-display font-medium text-text-light">
-                        {bonus.name}
-                      </h3>
-                      <div className={`px-2 py-1 rounded text-xs ${
-                        bonus.owned ? 'bg-accent/20 text-accent' : 'bg-primary/20 text-primary'
-                      }`}>
-                        {bonus.owned ? 'Приобретено' : `${bonus.cost} очков`}
-                      </div>
-                    </div>
-                    <p className="text-text-muted text-sm mb-3">{bonus.description}</p>
-                    
-                    {!bonus.owned && (
-                      <button
-                        onClick={() => purchaseBonus(bonus.id)}
-                        disabled={(session?.user?.bonusPoints || 0) < bonus.cost}
-                        className="w-full py-2 text-center text-sm rounded-md bg-primary/20 text-primary hover:bg-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {(session?.user?.bonusPoints || 0) < bonus.cost
-                          ? 'Недостаточно очков'
-                          : 'Приобрести бонус'}
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              
-              <div className="mt-8 p-4 rounded-lg bg-background-dark">
-                <h3 className="text-lg font-display font-medium text-text-light mb-2">
-                  Как получить больше бонусных очков
-                </h3>
-                <ul className="list-disc list-inside text-text-muted space-y-1">
-                  <li>Выигрывайте игры (+50 очков за победу)</li>
-                  <li>Выполняйте ежедневные задания (+10-30 очков)</li>
-                  <li>Приглашайте друзей (+100 очков за каждого друга)</li>
-                  <li>Участвуйте в турнирах (до +500 очков за победу в турнире)</li>
-                </ul>
-              </div>
-            </div>
-          </motion.div>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 } 
