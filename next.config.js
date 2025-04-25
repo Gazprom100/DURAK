@@ -3,8 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['i.pravatar.cc'],
-    unoptimized: true,
+    domains: ['lh3.googleusercontent.com', 'avatars.githubusercontent.com'],
   },
   eslint: {
     ignoreDuringBuilds: true,
@@ -20,41 +19,31 @@ const nextConfig = {
   compress: true,
   
   // Настройка обработки библиотек, которые могут использовать browser API
-  webpack: (config, { isServer }) => {
-    // Если код выполняется на сервере, добавляем заглушки для библиотек,
-    // которые используют browser API (window, document и т.д.)
-    if (isServer) {
-      // Расширенный список заглушек для browser API
-      config.resolve.fallback = {
-        // Используем пустые модули для browser API
-        fs: false,
-        net: false,
-        tls: false,
-        dns: false,
-        os: false,
-        path: false,
-        stream: false,
-        http: false,
-        https: false,
-        zlib: false,
-        crypto: require.resolve('crypto-browserify'),
-        // Добавляем пустой объект для window, document и других browser API
-        'decimal-js-sdk': isServer ? false : require.resolve('decimal-js-sdk'),
-        'ethers': isServer ? false : require.resolve('ethers'),
-      };
-    }
-    
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
     return config;
   },
   
   // Настройка экспериментальных функций
   experimental: {
-    // Список модулей для оптимизации импортов
-    optimizePackageImports: ['ethers', 'decimal-js-sdk', 'nanoid', 'next-auth'],
+    // Включаем использование серверных компонентов
+    serverComponentsExternalPackages: ['mongoose', 'ethers'],
   },
   
   // Больше информации о транспиляции модулей
   transpilePackages: ['ethers', 'decimal-js-sdk'],
+  
+  // Устанавливаем переменные окружения для правильного определения хоста
+  env: {
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+    HOSTNAME: process.env.HOSTNAME || '0.0.0.0',
+    PORT: process.env.PORT || 10000,
+  },
 };
 
 module.exports = nextConfig; 
