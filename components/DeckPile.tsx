@@ -35,7 +35,7 @@ export default function DeckPile({ cardCount, trumpSuit }: DeckPileProps) {
             id={`deck-${index}`}
             suit={trumpSuit} 
             rank={"6" as CardRank}
-            value={6}
+            power={6}
             faceDown={true}
           />
         </div>

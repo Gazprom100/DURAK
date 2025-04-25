@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Server as ServerIO } from 'socket.io';
-import type { NextApiRequest } from 'next';
-import type { Socket as NetSocket } from 'net';
 import { Server as HttpServer } from 'http';
+import { initSocket } from '@/server/socket';
 
 // Глобальный объект для хранения инстанса Socket.IO 
 let io: ServerIO | null = null;
@@ -27,20 +26,20 @@ export async function GET() {
 export function initSocketServer(httpServer: HttpServer) {
   if (!io) {
     console.log('Initializing Socket.IO server...');
-    io = new ServerIO(httpServer, {
-      path: '/api/socket',
-      cors: {
-        origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
-        methods: ['GET', 'POST'],
-        credentials: true,
-      },
-      addTrailingSlash: false,
-    });
-    
-    // Логика подключения из server/socket.ts будет перенесена сюда
-    setupSocketHandlers(io);
-    
-    console.log('Socket.IO server initialized');
+    try {
+      io = initSocket({
+        httpServer,
+        path: '/api/socket',
+        cors: {
+          origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+          methods: ['GET', 'POST'],
+          credentials: true,
+        }
+      });
+      console.log('Socket.IO server initialized');
+    } catch (error) {
+      console.error('Failed to initialize Socket.IO server:', error);
+    }
   }
   
   return io;

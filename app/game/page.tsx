@@ -61,12 +61,12 @@ export default function Game() {
             id: 'player1',
             name: session?.user?.name || 'Вы',
             cards: [
-              { id: '1', suit: 'hearts', rank: '10', value: 10 },
-              { id: '2', suit: 'diamonds', rank: 'K', value: 13 },
-              { id: '3', suit: 'clubs', rank: '6', value: 6 },
-              { id: '4', suit: 'spades', rank: 'A', value: 14 },
-              { id: '5', suit: 'hearts', rank: 'Q', value: 12 },
-              { id: '6', suit: 'diamonds', rank: '7', value: 7 },
+              { id: '1', suit: 'hearts', rank: '10', power: 10 },
+              { id: '2', suit: 'diamonds', rank: 'K', power: 13 },
+              { id: '3', suit: 'clubs', rank: '6', power: 6 },
+              { id: '4', suit: 'spades', rank: 'A', power: 14 },
+              { id: '5', suit: 'hearts', rank: 'Q', power: 12 },
+              { id: '6', suit: 'diamonds', rank: '7', power: 7 },
             ],
             isAttacker: true,
           },
@@ -77,7 +77,7 @@ export default function Game() {
               id: `opponent-${i}`,
               suit: ['hearts', 'diamonds', 'clubs', 'spades'][Math.floor(Math.random() * 4)] as CardSuit,
               rank: ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'][Math.floor(Math.random() * 9)] as CardRank,
-              value: Math.floor(Math.random() * 9) + 6,
+              power: Math.floor(Math.random() * 9) + 6,
             })),
             isAttacker: false,
             revealedCards: [],
@@ -89,15 +89,15 @@ export default function Game() {
           id: `deck-${i}`,
           suit: ['hearts', 'diamonds', 'clubs', 'spades'][Math.floor(Math.random() * 4)] as CardSuit,
           rank: ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'][Math.floor(Math.random() * 9)] as CardRank,
-          value: Math.floor(Math.random() * 9) + 6,
+          power: Math.floor(Math.random() * 9) + 6,
         })),
         tableCards: [
           {
-            attacking: { id: '7', suit: 'clubs', rank: '9', value: 9 },
-            defending: { id: '8', suit: 'hearts', rank: '9', value: 9 }
+            attacking: { id: '7', suit: 'clubs', rank: '9', power: 9 },
+            defending: { id: '8', suit: 'hearts', rank: '9', power: 9 }
           },
           {
-            attacking: { id: '9', suit: 'diamonds', rank: '6', value: 6 },
+            attacking: { id: '9', suit: 'diamonds', rank: '6', power: 6 },
           }
         ],
         gameCompleted: false,

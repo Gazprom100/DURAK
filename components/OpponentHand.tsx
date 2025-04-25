@@ -14,7 +14,7 @@ export default function OpponentHand({ cardCount }: OpponentHandProps) {
     id: `opponent-${index}`,
     suit: 'hearts' as CardSuit,
     rank: '6' as CardRank,
-    value: 0,
+    power: 0,
   }));
 
   return (

@@ -8,7 +8,7 @@ import {
   GameState,
   GameSettings,
   ChatMessage
-} from '@/types';
+} from '../types';
 
 /**
  * Ранги карт по силе (от слабой к сильной)
@@ -509,11 +509,11 @@ export function endTurn(game: GameState, playerId: string): GameState {
   
   // Игра заканчивается, если у кого-то нет карт и колода пуста
   if (updatedPlayer.cards.length === 0 && finalDeck.length === 0) {
-    gameStatus = 'complete';
+    gameStatus = 'complete' as any;
     gameCompleted = true;
     winner = playerId;
   } else if (updatedOpponent.cards.length === 0 && finalDeck.length === 0) {
-    gameStatus = 'complete';
+    gameStatus = 'complete' as any;
     gameCompleted = true;
     winner = opponent.id;
   }
