@@ -24,21 +24,33 @@ const nextConfig = {
     // Если код выполняется на сервере, добавляем заглушки для библиотек,
     // которые используют browser API (window, document и т.д.)
     if (isServer) {
+      // Расширенный список заглушек для browser API
       config.resolve.fallback = {
         // Используем пустые модули для browser API
         fs: false,
         net: false,
         tls: false,
+        dns: false,
+        os: false,
+        path: false,
+        stream: false,
+        http: false,
+        https: false,
+        zlib: false,
         crypto: require.resolve('crypto-browserify'),
+        // Добавляем пустой объект для window, document и других browser API
+        'decimal-js-sdk': isServer ? false : require.resolve('decimal-js-sdk'),
+        'ethers': isServer ? false : require.resolve('ethers'),
       };
     }
     
     return config;
   },
   
-  // Отключаем оптимизацию для favicon, так как мы используем SVG и OG-image
+  // Настройка экспериментальных функций
   experimental: {
-    optimizePackageImports: [''],
+    // Список модулей для оптимизации импортов
+    optimizePackageImports: ['ethers', 'decimal-js-sdk', 'nanoid', 'next-auth'],
   },
   
   // Больше информации о транспиляции модулей

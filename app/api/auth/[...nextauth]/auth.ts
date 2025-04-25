@@ -5,7 +5,8 @@ import { AuthOptions, Session } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import { createWallet, getWalletBalance } from '@/utils/decimal';
 
-// Признак серверной сборки - нужно быть особенно осторожным с API, использующими window
+// API route файлы всегда выполняются на сервере
+const isServer = true;
 const isProductionBuild = process.env.NODE_ENV === 'production';
 
 // Тут можно подключить настоящую DB в будущем
@@ -50,7 +51,7 @@ export const authOptions: AuthOptions = {
             // Создаем нового пользователя
             const userId = nanoid();
             
-            // Create wallet for new user - в режиме сборки будет возвращен мок
+            // Create wallet for new user - на сервере всегда используем мок
             const wallet = await createWallet();
             
             const newUser = {
@@ -105,16 +106,8 @@ export const authOptions: AuthOptions = {
         const username = session.user.name || '';
         const userData = users.get(username) || {};
         
-        // Update wallet balance if wallet exists - только в режиме разработки
-        if (userData.walletAddress && !isProductionBuild) {
-          try {
-            const balance = await getWalletBalance(userData.walletAddress);
-            userData.walletBalance = balance;
-            users.set(username, userData);
-          } catch (error) {
-            safeLog('Error updating wallet balance:', error);
-          }
-        }
+        // На сервере мы НЕ обновляем баланс кошелька в реальном времени
+        // Эта логика должна выполняться на клиенте
         
         // Теперь можем безопасно присваивать свойства благодаря расширенным типам
         session.user.id = token.sub;
