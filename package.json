@@ -15,6 +15,7 @@
     "fund-pool": "node scripts/fund-pool.js"
   },
   "dependencies": {
+    "@types/mongoose": "^5.11.96",
     "autoprefixer": "^10.4.21",
     "axios": "^1.9.0",
     "crypto-browserify": "^3.12.1",

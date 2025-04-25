@@ -1,4 +1,4 @@
-// Файл server.js для корректного запуска Next.js в режиме standalone
+// Файл server.js для корректного запуска Next.js в режиме standalone с поддержкой Socket.IO
 const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
@@ -15,7 +15,7 @@ const handle = app.getRequestHandler();
 // Подготовка приложения к старту
 app.prepare().then(() => {
   // Создаем HTTP сервер
-  createServer(async (req, res) => {
+  const httpServer = createServer(async (req, res) => {
     try {
       // Разбираем URL запроса
       const parsedUrl = parse(req.url, true);
@@ -39,7 +39,30 @@ app.prepare().then(() => {
       res.statusCode = 500;
       res.end('Internal Server Error');
     }
-  }).listen(port, hostname, (err) => {
+  });
+  
+  // Инициализируем Socket.IO сервер
+  try {
+    // Динамически импортируем инициализатор Socket.IO
+    // Это позволяет подключить TypeScript модуль в CommonJS
+    import('./app/api/socket/route.js')
+      .then(({ initSocketServer }) => {
+        if (typeof initSocketServer === 'function') {
+          initSocketServer(httpServer);
+          console.log('Socket.IO server attached to HTTP server');
+        } else {
+          console.error('initSocketServer is not a function');
+        }
+      })
+      .catch(err => {
+        console.error('Failed to initialize Socket.IO server:', err);
+      });
+  } catch (err) {
+    console.error('Error while initializing Socket.IO:', err);
+  }
+  
+  // Запускаем сервер
+  httpServer.listen(port, hostname, (err) => {
     if (err) throw err;
     console.log(`> Ready on http://${hostname}:${port}`);
     
