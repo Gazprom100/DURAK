@@ -29,14 +29,11 @@ const nextConfig = {
     return config;
   },
   
-  // Настройка экспериментальных функций
-  experimental: {
-    // Включаем использование серверных компонентов
-    serverComponentsExternalPackages: ['mongoose', 'ethers'],
-  },
+  // Серверные пакеты (перемещено из experimental.serverComponentsExternalPackages)
+  serverExternalPackages: ['mongoose'],
   
-  // Больше информации о транспиляции модулей
-  transpilePackages: ['ethers', 'decimal-js-sdk'],
+  // Транспиляция только пакета decimal-js-sdk (ethers перемещен в serverExternalPackages)
+  transpilePackages: ['decimal-js-sdk'],
   
   // Устанавливаем переменные окружения для правильного определения хоста
   env: {
