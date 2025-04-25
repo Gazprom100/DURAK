@@ -4,12 +4,32 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/models/User';
 import Wallet from '@/models/Wallet';
-import { createWallet, getAddressFromPrivateKey } from '@/lib/wallet';
+import { ethers } from 'ethers';
 
 // API-маршрут для создания кошелька пользователя
 
 // Признак серверной среды - всегда true в API роутах
 const isServer = true;
+
+// Функция для создания кошелька, перенесенная прямо в этот файл
+function createWallet() {
+  const wallet = ethers.Wallet.createRandom();
+  return {
+    address: wallet.address,
+    privateKey: wallet.privateKey,
+  };
+}
+
+// Функция для получения адреса из приватного ключа
+function getAddressFromPrivateKey(privateKey: string): string {
+  try {
+    const wallet = new ethers.Wallet(privateKey);
+    return wallet.address;
+  } catch (error) {
+    console.error('Error getting address from private key:', error);
+    throw new Error('Invalid private key');
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {

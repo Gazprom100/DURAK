@@ -5,10 +5,26 @@ import connectToDatabase from '@/lib/mongodb';
 import Wallet from '@/models/Wallet';
 import Transaction from '@/models/Transaction';
 import { TransactionType } from '@/models/Transaction';
-import { getBalance } from '@/lib/wallet';
+import { ethers } from 'ethers';
 
 // Признак серверной среды - всегда true в API роутах
 const isServer = true;
+
+// Провайдер для подключения к Decimal Chain
+const decimalProvider = new ethers.providers.JsonRpcProvider('https://node.decimalchain.com/web3/');
+
+// Функция для получения баланса кошелька (перенесена в этот файл)
+async function getBalance(address: string): Promise<number> {
+  try {
+    const checksumAddress = ethers.utils.getAddress(address);
+    const balanceWei = await decimalProvider.getBalance(checksumAddress);
+    return parseFloat(ethers.utils.formatEther(balanceWei));
+  } catch (error) {
+    console.error('Error fetching balance:', error);
+    // Вместо ошибки возвращаем -1, чтобы не прерывать основной поток
+    return -1;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -60,7 +76,9 @@ export async function POST(req: NextRequest) {
     // Проверяем баланс через API блокчейна (для сверки)
     try {
       const chainBalance = await getBalance(wallet.address);
-      console.log(`Chain balance: ${chainBalance}, DB balance: ${wallet.balance}`);
+      if (chainBalance >= 0) {
+        console.log(`Chain balance: ${chainBalance}, DB balance: ${wallet.balance}`);
+      }
       
       // Здесь можно добавить логику синхронизации, если балансы не совпадают
     } catch (error) {

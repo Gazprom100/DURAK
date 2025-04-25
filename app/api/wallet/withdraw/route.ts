@@ -5,10 +5,73 @@ import connectToDatabase from '@/lib/mongodb';
 import Wallet from '@/models/Wallet';
 import Transaction from '@/models/Transaction';
 import { TransactionType } from '@/models/Transaction';
-import { sendDel, getBalance } from '@/lib/wallet';
+import { ethers } from 'ethers';
 
 // Признак серверной среды - всегда true в API роутах
 const isServer = true;
+
+// Провайдер для подключения к Decimal Chain
+const decimalProvider = new ethers.providers.JsonRpcProvider('https://node.decimalchain.com/web3/');
+
+// Константы для настройки сети
+const DECIMAL_CHAIN_ID = 75;
+const GAS_PRICE = ethers.utils.parseUnits('50000', 'gwei');
+const GAS_LIMIT = 21000;
+
+// Функция для получения баланса кошелька
+async function getBalance(address: string): Promise<number> {
+  try {
+    const checksumAddress = ethers.utils.getAddress(address);
+    const balanceWei = await decimalProvider.getBalance(checksumAddress);
+    return parseFloat(ethers.utils.formatEther(balanceWei));
+  } catch (error) {
+    console.error('Error fetching balance:', error);
+    // Вместо ошибки возвращаем -1, чтобы не прерывать основной поток
+    return -1;
+  }
+}
+
+// Функция для отправки DEL
+async function sendDel(
+  toAddress: string,
+  amount: number,
+  privateKey: string
+): Promise<{ txHash: string; explorerUrl: string }> {
+  try {
+    // Создаем кошелек с приватным ключом
+    const wallet = new ethers.Wallet(privateKey, decimalProvider);
+    const fromAddress = wallet.address;
+
+    // Получаем текущий nonce
+    const nonce = await decimalProvider.getTransactionCount(fromAddress);
+
+    // Создаем транзакцию
+    const transaction = {
+      from: fromAddress,
+      to: ethers.utils.getAddress(toAddress),
+      value: ethers.utils.parseEther(amount.toString()),
+      gasLimit: GAS_LIMIT,
+      gasPrice: GAS_PRICE,
+      nonce: nonce,
+      chainId: DECIMAL_CHAIN_ID,
+    };
+
+    // Подписываем и отправляем транзакцию
+    const signedTransaction = await wallet.signTransaction(transaction);
+    const txResponse = await decimalProvider.sendTransaction(signedTransaction);
+    
+    // Ждем подтверждения транзакции (1 блок)
+    await txResponse.wait(1);
+
+    const txHash = txResponse.hash;
+    const explorerUrl = `https://explorer.decimalchain.com/transactions/${txHash}`;
+
+    return { txHash, explorerUrl };
+  } catch (error) {
+    console.error('Error sending DEL:', error);
+    throw new Error(`Failed to send ${amount} DEL to ${toAddress}: ${error}`);
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -106,7 +169,9 @@ export async function POST(req: NextRequest) {
     // После транзакции проверяем баланс в блокчейне
     try {
       const chainBalance = await getBalance(wallet.address);
-      console.log(`Chain balance after withdrawal: ${chainBalance}, DB balance: ${wallet.balance}`);
+      if (chainBalance >= 0) {
+        console.log(`Chain balance after withdrawal: ${chainBalance}, DB balance: ${wallet.balance}`);
+      }
       
       // Здесь можно добавить логику синхронизации, если балансы не совпадают
     } catch (error) {
