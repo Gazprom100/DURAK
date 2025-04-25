@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions, getUserPrivateKey } from '@/app/api/auth/[...nextauth]/auth';
-import { getWalletBalance } from '@/utils/decimal';
+import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
+import { getUserByName, updateUser } from '@/utils/user-store';
 
-// Чтобы избежать проблем с window на сервере, 
-// весь код должен быть безопасным для SSR
+// Признак серверной среды - всегда true в API роутах
+const isServer = true;
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,20 +28,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // In a real implementation, this would integrate with a payment gateway
-    // For demo purposes, we'll simulate a successful deposit
+    // Проверяем создан ли кошелек пользователя
+    const username = session.user.name || '';
+    const user = getUserByName(username);
     
-    // For a real implementation you would:
-    // 1. Create a payment intent with a payment provider
-    // 2. Return a client secret to complete the payment on the frontend
-    // 3. Handle webhook callbacks to confirm the payment
-    // 4. Update the user's wallet balance once payment is confirmed
+    if (!user || !user.walletCreated) {
+      return NextResponse.json(
+        { error: 'Wallet not created', success: false }, 
+        { status: 400 }
+      );
+    }
+
+    // В реальном приложении тут была бы интеграция с платежной системой
+    // Для демо просто обновляем баланс пользователя
+    
+    // Обновляем баланс пользователя
+    const currentBalance = parseFloat(user.walletBalance);
+    const newBalance = currentBalance + parseFloat(amount);
+    
+    // Обновляем данные пользователя
+    updateUser(user.id, {
+      walletBalance: newBalance.toString()
+    });
     
     return NextResponse.json({
       success: true,
       message: `Deposit of ${amount} DEL was processed successfully`,
-      // Typically you would return a payment intent or session ID here
-      paymentId: `demo-payment-${Date.now()}`,
+      newBalance: newBalance.toString(),
     });
   } catch (error: any) {
     console.error('Error processing deposit:', error);

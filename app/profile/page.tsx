@@ -23,6 +23,7 @@ export default function Profile() {
     success: boolean;
     message: string;
   } | null>(null);
+  const [isCreatingWallet, setIsCreatingWallet] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -122,6 +123,44 @@ export default function Profile() {
     }
   };
 
+  const handleCreateWallet = async () => {
+    setIsCreatingWallet(true);
+    setTransactionStatus(null);
+    
+    try {
+      const response = await fetch('/api/wallet/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setTransactionStatus({ 
+          success: true, 
+          message: 'Кошелек успешно создан!' 
+        });
+        
+        // Refresh session to update wallet info
+        router.refresh();
+      } else {
+        setTransactionStatus({ 
+          success: false, 
+          message: data.error || 'Произошла ошибка при создании кошелька' 
+        });
+      }
+    } catch (error) {
+      setTransactionStatus({ 
+        success: false, 
+        message: 'Произошла ошибка при создании кошелька' 
+      });
+    } finally {
+      setIsCreatingWallet(false);
+    }
+  };
+
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background-darker text-text-light">
@@ -211,11 +250,22 @@ export default function Profile() {
                   </div>
                   <div className="mt-2 flex justify-between items-center">
                     <span className="text-text-muted">Адрес кошелька:</span>
-                    <span className="text-text-light bg-background-dark px-3 py-1 rounded-md text-sm font-mono">
-                      {session?.user?.walletAddress ? 
-                        `${session.user.walletAddress.substring(0, 8)}...${session.user.walletAddress.substring(session.user.walletAddress.length - 8)}` : 
-                        'Кошелек не создан'}
-                    </span>
+                    {session?.user?.walletAddress ? (
+                      <span className="text-text-light bg-background-dark px-3 py-1 rounded-md text-sm font-mono">
+                        {`${session.user.walletAddress.substring(0, 8)}...${session.user.walletAddress.substring(session.user.walletAddress.length - 8)}`}
+                      </span>
+                    ) : (
+                      <div className="flex items-center">
+                        <span className="text-red-500 mr-2">Кошелек не создан</span>
+                        <button
+                          onClick={handleCreateWallet}
+                          disabled={isCreatingWallet}
+                          className="btn-primary btn-sm"
+                        >
+                          {isCreatingWallet ? 'Создание...' : 'Создать'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
                 

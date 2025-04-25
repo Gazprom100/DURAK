@@ -4,17 +4,14 @@ import { nanoid } from 'nanoid';
 import { AuthOptions, Session } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import { createWallet, getWalletBalance } from '@/utils/decimal';
+import { 
+  User, users, walletPrivateKeys, userExists, getUserByName, 
+  addUser, getUserPrivateKey as getPrivateKeyFromStore 
+} from '@/utils/user-store';
 
 // API route файлы всегда выполняются на сервере
 const isServer = true;
 const isProductionBuild = process.env.NODE_ENV === 'production';
-
-// Тут можно подключить настоящую DB в будущем
-const users = new Map();
-
-// Store wallet private keys securely
-// In a real application, this would be encrypted and stored in a secure database
-const walletPrivateKeys = new Map();
 
 // Game pool wallet (in a real application, this would be managed securely)
 const gamePoolWallet = {
@@ -45,16 +42,14 @@ export const authOptions: AuthOptions = {
         // Для демо простая авторизация, в проде нужна настоящая БД
         if (!credentials?.username) return null;
         
-        // Проверяем, есть ли пользователь в "БД"
-        if (!users.has(credentials.username)) {
+        // Проверяем, есть ли пользователь в хранилище
+        if (!userExists(credentials.username)) {
           try {
             // Создаем нового пользователя
             const userId = nanoid();
             
-            // Create wallet for new user - на сервере всегда используем мок
-            const wallet = await createWallet();
-            
-            const newUser = {
+            // Базовые поля пользователя без кошелька
+            const newUser: User = {
               id: userId,
               name: credentials.username,
               email: `${credentials.username}@example.com`,
@@ -63,36 +58,22 @@ export const authOptions: AuthOptions = {
               wins: 0,
               losses: 0,
               gamesPlayed: 0,
-              walletAddress: wallet.address,
+              walletAddress: '', // Кошелек не создан при регистрации
               walletBalance: '0',
-              walletCreated: true,
+              walletCreated: false, // Кошелек создается отдельно
             };
             
-            // Store user data and wallet private key
-            users.set(credentials.username, newUser);
-            walletPrivateKeys.set(userId, wallet.privateKey);
+            // Добавляем пользователя в хранилище
+            addUser(newUser);
           } catch (error) {
-            safeLog('Error creating user wallet:', error);
-            // Создаем пользователя без кошелька в случае ошибки
-            const userId = nanoid();
-            const newUser = {
-              id: userId,
-              name: credentials.username,
-              email: `${credentials.username}@example.com`,
-              image: `https://i.pravatar.cc/150?u=${userId}`,
-              bonusPoints: 100,
-              wins: 0,
-              losses: 0,
-              gamesPlayed: 0,
-              walletAddress: '',
-              walletBalance: '0',
-              walletCreated: false,
-            };
-            users.set(credentials.username, newUser);
+            safeLog('Error creating user:', error);
+            return null;
           }
         }
         
-        return users.get(credentials.username);
+        // Получаем пользователя и преобразуем в объект, совместимый с next-auth
+        const user = getUserByName(credentials.username);
+        return user || null; // Явно преобразуем undefined в null для next-auth
       }
     }),
   ],
@@ -104,20 +85,29 @@ export const authOptions: AuthOptions = {
       // Добавляем дополнительные данные в сессию
       if (session.user) {
         const username = session.user.name || '';
-        const userData = users.get(username) || {};
+        const user = getUserByName(username);
         
-        // На сервере мы НЕ обновляем баланс кошелька в реальном времени
-        // Эта логика должна выполняться на клиенте
-        
-        // Теперь можем безопасно присваивать свойства благодаря расширенным типам
-        session.user.id = token.sub;
-        session.user.bonusPoints = userData.bonusPoints || 0;
-        session.user.wins = userData.wins || 0;
-        session.user.losses = userData.losses || 0;
-        session.user.gamesPlayed = userData.gamesPlayed || 0;
-        session.user.walletAddress = userData.walletAddress || '';
-        session.user.walletBalance = userData.walletBalance || '0';
-        session.user.walletCreated = userData.walletCreated || false;
+        // Используем безопасное присваивание с проверкой существования пользователя
+        if (user) {
+          session.user.id = token.sub || user.id;
+          session.user.bonusPoints = user.bonusPoints;
+          session.user.wins = user.wins;
+          session.user.losses = user.losses;
+          session.user.gamesPlayed = user.gamesPlayed;
+          session.user.walletAddress = user.walletAddress;
+          session.user.walletBalance = user.walletBalance;
+          session.user.walletCreated = user.walletCreated;
+        } else {
+          // Дефолтные значения, если пользователь не найден
+          session.user.id = token.sub;
+          session.user.bonusPoints = 0;
+          session.user.wins = 0;
+          session.user.losses = 0;
+          session.user.gamesPlayed = 0;
+          session.user.walletAddress = '';
+          session.user.walletBalance = '0';
+          session.user.walletCreated = false;
+        }
       }
       return session;
     },
@@ -129,7 +119,7 @@ export const authOptions: AuthOptions = {
 
 // Helper functions for wallet management
 export const getUserPrivateKey = (userId: string): string => {
-  return walletPrivateKeys.get(userId) || '';
+  return getPrivateKeyFromStore(userId);
 };
 
 export const getGamePoolWallet = () => {

@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions, getUserPrivateKey } from '@/app/api/auth/[...nextauth]/auth';
-import { transferToExternalWallet } from '@/utils/decimal';
+import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
+import { getUserByName, updateUser } from '@/utils/user-store';
 
-// Чтобы избежать проблем с window на сервере,
-// весь код должен быть безопасным для SSR
+// Признак серверной среды - всегда true в API роутах
+const isServer = true;
 
 export async function POST(req: NextRequest) {
   try {
     // Get user session
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user || !session.user.id) {
+    if (!session || !session.user) {
       return NextResponse.json(
         { error: 'Unauthorized', success: false }, 
         { status: 401 }
@@ -28,56 +28,48 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    if (!toAddress || !toAddress.trim()) {
+    if (!toAddress) {
       return NextResponse.json(
-        { error: 'Invalid destination address', success: false }, 
+        { error: 'Withdrawal address is required', success: false }, 
         { status: 400 }
       );
     }
 
-    // Get user's private key
-    const privateKey = getUserPrivateKey(session.user.id);
+    // Проверяем создан ли кошелек пользователя и достаточно ли средств
+    const username = session.user.name || '';
+    const user = getUserByName(username);
     
-    if (!privateKey) {
+    if (!user || !user.walletCreated) {
       return NextResponse.json(
-        { error: 'Wallet access error', success: false }, 
+        { error: 'Wallet not created', success: false }, 
+        { status: 400 }
+      );
+    }
+    
+    // Проверяем баланс
+    const currentBalance = parseFloat(user.walletBalance);
+    const withdrawalAmount = parseFloat(amount);
+    
+    if (currentBalance < withdrawalAmount) {
+      return NextResponse.json(
+        { error: 'Insufficient funds', success: false }, 
         { status: 400 }
       );
     }
 
-    // В режиме сборки или на сервере, мы можем использовать моки для предотвращения ошибок
-    // В реальной работе приложения это будет настоящая транзакция
-    const isServerBuild = process.env.NODE_ENV === 'production';
+    // Обновляем баланс пользователя
+    const newBalance = currentBalance - withdrawalAmount;
     
-    let withdrawalResult;
+    // Обновляем данные пользователя
+    updateUser(user.id, {
+      walletBalance: newBalance.toString()
+    });
     
-    if (isServerBuild) {
-      // Используем мок для сборки на сервере
-      withdrawalResult = {
-        success: true, 
-        txHash: `mock-tx-${Date.now()}`
-      };
-    } else {
-      // Процесс реального вывода средств
-      withdrawalResult = await transferToExternalWallet(
-        privateKey,
-        session.user.walletAddress || '',
-        toAddress,
-        amount
-      );
-    }
-    
-    if (!withdrawalResult.success) {
-      return NextResponse.json(
-        { error: withdrawalResult.error || 'Withdrawal failed', success: false }, 
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json({
       success: true,
-      message: `Successfully withdrawn ${amount} DEL to ${toAddress}`,
-      txHash: withdrawalResult.txHash,
+      message: `Withdrawal of ${amount} DEL to ${toAddress.substring(0, 8)}... was processed successfully`,
+      newBalance: newBalance.toString(),
+      txHash: `mock-withdrawal-${Date.now()}`
     });
   } catch (error: any) {
     console.error('Error processing withdrawal:', error);
