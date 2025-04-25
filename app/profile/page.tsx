@@ -9,6 +9,8 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+// На стороне клиента будут работать все функции, которые взаимодействуют с wallet API
+
 export default function Profile() {
   const { data: session, status } = useSession();
   const router = useRouter();

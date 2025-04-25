@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions, getUserPrivateKey } from '@/app/api/auth/[...nextauth]/auth';
 import { getWalletBalance } from '@/utils/decimal';
 
+// Чтобы избежать проблем с window на сервере, 
+// весь код должен быть безопасным для SSR
+
 export async function POST(req: NextRequest) {
   try {
     // Get user session

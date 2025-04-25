@@ -17,6 +17,7 @@
   "dependencies": {
     "autoprefixer": "^10.4.16",
     "axios": "^1.6.0",
+    "crypto-browserify": "^3.12.1",
     "decimal-js-sdk": "^0.4.2",
     "ethers": "^5.7.2",
     "framer-motion": "^10.18.0",

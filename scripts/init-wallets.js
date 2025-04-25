@@ -2,6 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+// Проверка, запущен ли скрипт на сервере
+const isServer = typeof window === 'undefined';
+
 // Проверка и установка необходимых зависимостей
 function checkAndInstallDependencies() {
   console.log('🔍 Проверка необходимых зависимостей...');
@@ -40,7 +43,15 @@ checkAndInstallDependencies();
 
 // Подключаем необходимые библиотеки
 require('dotenv').config();
-const { ethers } = require('ethers');
+
+// Безопасный импорт библиотек, которые могут использовать браузерные API
+let ethers;
+try {
+  ethers = require('ethers');
+} catch (error) {
+  console.error('❌ Ошибка при импорте ethers:', error.message);
+  process.exit(1);
+}
 
 // Создаем папку scripts, если она не существует
 if (!fs.existsSync(path.join(__dirname))) {
@@ -55,19 +66,29 @@ const envPath = path.join(__dirname, '../.env.local');
  */
 function createGamePoolWallet() {
   console.log('🔑 Создаем кошелек пула игры...');
-  const wallet = ethers.Wallet.createRandom();
-  
-  return {
-    address: wallet.address,
-    privateKey: wallet.privateKey,
-    mnemonic: wallet.mnemonic.phrase
-  };
+  try {
+    const wallet = ethers.Wallet.createRandom();
+    
+    return {
+      address: wallet.address,
+      privateKey: wallet.privateKey,
+      mnemonic: wallet.mnemonic.phrase
+    };
+  } catch (error) {
+    console.error('❌ Ошибка при создании кошелька:', error.message);
+    return null;
+  }
 }
 
 /**
  * Обновляет .env.local файл с данными кошелька
  */
 function updateEnvFile(wallet) {
+  if (!wallet) {
+    console.error('❌ Невозможно обновить файл конфигурации: кошелек не создан');
+    return;
+  }
+  
   console.log('📝 Обновляем конфигурационные файлы...');
   
   // Проверяем существует ли .env.local, если нет - создаем его из .env.example
@@ -143,14 +164,25 @@ function initWallets() {
   // Обновляем .env файл
   updateEnvFile(gamePoolWallet);
   
-  console.log(`
+  if (gamePoolWallet) {
+    console.log(`
 🎮 Кошелек пула игры успешно создан!
 📋 Адрес: ${gamePoolWallet.address}
   
 ⚠️ ВАЖНО: Мы сохранили приватный ключ и мнемоническую фразу в файле wallet-info.txt
 ⚠️ Для безопасности рекомендуем сохранить эту информацию в другом месте и удалить файл
-  `);
+    `);
+  }
 }
 
-// Запускаем инициализацию кошельков
-initWallets(); 
+// Запускаем инициализацию кошельков только если скрипт запущен напрямую
+if (require.main === module) {
+  initWallets();
+}
+
+// Экспортируем функции для использования в других модулях
+module.exports = {
+  initWallets,
+  createGamePoolWallet,
+  updateEnvFile
+}; 
