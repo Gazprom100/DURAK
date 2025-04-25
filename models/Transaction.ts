@@ -24,8 +24,8 @@ export interface ITransaction extends Document {
 // Схема транзакции для MongoDB
 const TransactionSchema = new Schema<ITransaction>(
   {
-    fromAddress: { type: String, required: true, index: true },
-    toAddress: { type: String, required: true, index: true },
+    fromAddress: { type: String, required: true },
+    toAddress: { type: String, required: true },
     amount: { type: Number, required: true },
     type: { 
       type: String, 

@@ -1,80 +1,137 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { getUserByName, updateUser } from '@/utils/user-store';
+import connectToDatabase from '@/lib/mongodb';
+import Wallet from '@/models/Wallet';
+import Transaction from '@/models/Transaction';
+import { TransactionType } from '@/models/Transaction';
+import { sendDel, getBalance } from '@/lib/wallet';
 
 // Признак серверной среды - всегда true в API роутах
 const isServer = true;
 
 export async function POST(req: NextRequest) {
   try {
-    // Get user session
+    // Проверяем авторизацию пользователя
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user) {
+    if (!session || !session.user || !session.user.id) {
       return NextResponse.json(
         { error: 'Unauthorized', success: false }, 
         { status: 401 }
       );
     }
-
-    // Get request data
-    const { amount, toAddress } = await req.json();
     
-    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+    // Получаем данные из запроса
+    const data = await req.json();
+    const { amount, toAddress } = data;
+    
+    // Проверяем параметры запроса
+    const withdrawAmount = parseFloat(amount);
+    if (!withdrawAmount || isNaN(withdrawAmount) || withdrawAmount <= 0) {
       return NextResponse.json(
-        { error: 'Invalid amount', success: false }, 
+        { error: 'Invalid amount', success: false },
         { status: 400 }
       );
     }
     
     if (!toAddress) {
       return NextResponse.json(
-        { error: 'Withdrawal address is required', success: false }, 
+        { error: 'Recipient address is required', success: false },
         { status: 400 }
       );
     }
-
-    // Проверяем создан ли кошелек пользователя и достаточно ли средств
-    const username = session.user.name || '';
-    const user = getUserByName(username);
     
-    if (!user || !user.walletCreated) {
+    // Подключаемся к базе данных
+    await connectToDatabase();
+    
+    // Находим кошелек пользователя
+    const wallet = await Wallet.findOne({ userId: session.user.id });
+    
+    if (!wallet) {
       return NextResponse.json(
-        { error: 'Wallet not created', success: false }, 
-        { status: 400 }
+        { error: 'Wallet not found', success: false },
+        { status: 404 }
       );
     }
     
-    // Проверяем баланс
-    const currentBalance = parseFloat(user.walletBalance);
-    const withdrawalAmount = parseFloat(amount);
-    
-    if (currentBalance < withdrawalAmount) {
+    // Проверяем достаточность средств
+    const currentBalanceInDB = parseFloat(wallet.balance.toString());
+    if (currentBalanceInDB < withdrawAmount) {
       return NextResponse.json(
-        { error: 'Insufficient funds', success: false }, 
+        { error: 'Insufficient funds', success: false },
         { status: 400 }
       );
     }
-
-    // Обновляем баланс пользователя
-    const newBalance = currentBalance - withdrawalAmount;
     
-    // Обновляем данные пользователя
-    updateUser(user.id, {
-      walletBalance: newBalance.toString()
+    // В реальном приложении здесь должна быть отправка средств в блокчейн
+    let txHash = '';
+    let explorerUrl = '';
+    
+    try {
+      // Если это не тестовая среда, пробуем отправить средства через блокчейн
+      if (process.env.NODE_ENV === 'production') {
+        const result = await sendDel(toAddress, withdrawAmount, wallet.privateKey);
+        txHash = result.txHash;
+        explorerUrl = result.explorerUrl;
+      } else {
+        // В тестовой среде симулируем успешную транзакцию
+        txHash = `mock_tx_${Date.now()}`;
+        explorerUrl = `https://explorer.decimalchain.com/transactions/${txHash}`;
+      }
+    } catch (error: any) {
+      console.error('Error sending DEL:', error);
+      return NextResponse.json(
+        { error: `Blockchain transaction failed: ${error.message}`, success: false },
+        { status: 500 }
+      );
+    }
+    
+    // Обновляем баланс кошелька в локальной базе данных
+    wallet.balance = currentBalanceInDB - withdrawAmount;
+    await wallet.save();
+    
+    // Создаем запись о транзакции
+    const transaction = new Transaction({
+      fromAddress: wallet.address,
+      toAddress: toAddress,
+      amount: withdrawAmount,
+      type: TransactionType.WITHDRAWAL,
+      status: 'completed',
+      metadata: { txHash, explorerUrl }
     });
+    
+    await transaction.save();
+    
+    // После транзакции проверяем баланс в блокчейне
+    try {
+      const chainBalance = await getBalance(wallet.address);
+      console.log(`Chain balance after withdrawal: ${chainBalance}, DB balance: ${wallet.balance}`);
+      
+      // Здесь можно добавить логику синхронизации, если балансы не совпадают
+    } catch (error) {
+      console.warn('Failed to verify chain balance:', error);
+    }
     
     return NextResponse.json({
       success: true,
-      message: `Withdrawal of ${amount} DEL to ${toAddress.substring(0, 8)}... was processed successfully`,
-      newBalance: newBalance.toString(),
-      txHash: `mock-withdrawal-${Date.now()}`
+      message: 'Withdrawal successful',
+      data: {
+        txHash,
+        explorerUrl,
+        newBalance: wallet.balance,
+        transaction: {
+          id: transaction._id,
+          amount: transaction.amount,
+          status: transaction.status
+        }
+      }
     });
+    
   } catch (error: any) {
     console.error('Error processing withdrawal:', error);
     return NextResponse.json(
-      { error: error.message || 'An error occurred', success: false }, 
+      { error: error.message || 'Failed to process withdrawal', success: false },
       { status: 500 }
     );
   }

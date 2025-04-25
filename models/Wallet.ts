@@ -1,8 +1,9 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from 'mongoose';
 
 // Интерфейс для типизации документа кошелька
-export interface IWallet extends Document {
+export interface IWallet {
   address: string;
+  privateKey: string;
   userId: string;
   balance: number;
   createdAt: Date;
@@ -10,17 +11,20 @@ export interface IWallet extends Document {
 }
 
 // Схема кошелька для MongoDB
-const WalletSchema = new Schema<IWallet>(
+const WalletSchema = new mongoose.Schema(
   {
     address: { type: String, required: true, unique: true },
-    userId: { type: String, required: true, index: true },
-    balance: { type: Number, default: 1000 }, // Начальный баланс для новых кошельков
+    privateKey: { type: String, required: true },
+    userId: { type: String, required: true },
+    balance: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
-// Создаем индекс для быстрого поиска кошелька по userId
+// Создаем индекс для быстрого поиска по userId
 WalletSchema.index({ userId: 1 });
 
 // Проверяем, не была ли модель уже скомпилирована
-export default mongoose.models.Wallet || mongoose.model<IWallet>('Wallet', WalletSchema); 
+const Wallet = mongoose.models.Wallet || mongoose.model<IWallet>('Wallet', WalletSchema);
+
+export default Wallet; 
