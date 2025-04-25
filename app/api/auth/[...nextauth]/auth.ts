@@ -5,6 +5,9 @@ import { AuthOptions, Session } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import { createWallet, getWalletBalance } from '@/utils/decimal';
 
+// Признак серверной сборки - нужно быть особенно осторожным с API, использующими window
+const isProductionBuild = process.env.NODE_ENV === 'production';
+
 // Тут можно подключить настоящую DB в будущем
 const users = new Map();
 
@@ -16,6 +19,13 @@ const walletPrivateKeys = new Map();
 const gamePoolWallet = {
   address: process.env.GAME_POOL_ADDRESS || '',
   privateKey: process.env.GAME_POOL_PRIVATE_KEY || '',
+};
+
+// Безопасный логгер, который не будет вызывать проблем при сборке
+const safeLog = (message: string, error?: any) => {
+  if (!isProductionBuild) {
+    console.error(message, error);
+  }
 };
 
 export const authOptions: AuthOptions = {
@@ -36,29 +46,49 @@ export const authOptions: AuthOptions = {
         
         // Проверяем, есть ли пользователь в "БД"
         if (!users.has(credentials.username)) {
-          // Создаем нового пользователя
-          const userId = nanoid();
-          
-          // Create wallet for new user
-          const wallet = await createWallet();
-          
-          const newUser = {
-            id: userId,
-            name: credentials.username,
-            email: `${credentials.username}@example.com`,
-            image: `https://i.pravatar.cc/150?u=${userId}`,
-            bonusPoints: 100, // Начальные бонусы
-            wins: 0,
-            losses: 0,
-            gamesPlayed: 0,
-            walletAddress: wallet.address,
-            walletBalance: '0',
-            walletCreated: true,
-          };
-          
-          // Store user data and wallet private key
-          users.set(credentials.username, newUser);
-          walletPrivateKeys.set(userId, wallet.privateKey);
+          try {
+            // Создаем нового пользователя
+            const userId = nanoid();
+            
+            // Create wallet for new user - в режиме сборки будет возвращен мок
+            const wallet = await createWallet();
+            
+            const newUser = {
+              id: userId,
+              name: credentials.username,
+              email: `${credentials.username}@example.com`,
+              image: `https://i.pravatar.cc/150?u=${userId}`,
+              bonusPoints: 100, // Начальные бонусы
+              wins: 0,
+              losses: 0,
+              gamesPlayed: 0,
+              walletAddress: wallet.address,
+              walletBalance: '0',
+              walletCreated: true,
+            };
+            
+            // Store user data and wallet private key
+            users.set(credentials.username, newUser);
+            walletPrivateKeys.set(userId, wallet.privateKey);
+          } catch (error) {
+            safeLog('Error creating user wallet:', error);
+            // Создаем пользователя без кошелька в случае ошибки
+            const userId = nanoid();
+            const newUser = {
+              id: userId,
+              name: credentials.username,
+              email: `${credentials.username}@example.com`,
+              image: `https://i.pravatar.cc/150?u=${userId}`,
+              bonusPoints: 100,
+              wins: 0,
+              losses: 0,
+              gamesPlayed: 0,
+              walletAddress: '',
+              walletBalance: '0',
+              walletCreated: false,
+            };
+            users.set(credentials.username, newUser);
+          }
         }
         
         return users.get(credentials.username);
@@ -75,14 +105,14 @@ export const authOptions: AuthOptions = {
         const username = session.user.name || '';
         const userData = users.get(username) || {};
         
-        // Update wallet balance if wallet exists
-        if (userData.walletAddress) {
+        // Update wallet balance if wallet exists - только в режиме разработки
+        if (userData.walletAddress && !isProductionBuild) {
           try {
             const balance = await getWalletBalance(userData.walletAddress);
             userData.walletBalance = balance;
             users.set(username, userData);
           } catch (error) {
-            console.error('Error updating wallet balance:', error);
+            safeLog('Error updating wallet balance:', error);
           }
         }
         

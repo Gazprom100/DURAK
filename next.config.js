@@ -39,8 +39,6 @@ const nextConfig = {
   // Отключаем оптимизацию для favicon, так как мы используем SVG и OG-image
   experimental: {
     optimizePackageImports: [''],
-    // Устанавливаем ssr: false для компонентов, использующих browser API
-    ssr: true,
   },
   
   // Больше информации о транспиляции модулей
