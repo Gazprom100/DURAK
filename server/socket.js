@@ -13,11 +13,12 @@ import {
   addChatMessage
 } from './gameLogic.js';
 import { Server } from 'socket.io';
-import { createAdapter } from '@socket.io/redis-adapter';
-import { createClient } from 'redis';
-import { addPlayerToLobby, removePlayerFromLobby, getLobbyPlayersData, leaveAllGames, checkGame } from './redis.js'; 
-import { GAME_EVENTS, LOBBY_EVENTS } from '@/constants/events.js';
-import { GameManager } from './gameManager.js';
+// Удаляем неиспользуемые зависимости
+// import { createAdapter } from '@socket.io/redis-adapter';
+// import { createClient } from 'redis';
+// import { addPlayerToLobby, removePlayerFromLobby, getLobbyPlayersData, leaveAllGames, checkGame } from './redis.js'; 
+import { GAME_EVENTS, LOBBY_EVENTS } from '../constants/events.js';
+// import { GameManager } from './gameManager.js';
 
 // In-memory store for active games
 const games = {};

@@ -65,9 +65,4 @@ export interface GameState {
   remainingTime?: number; // Оставшееся время для хода
   winner?: string; // ID победителя
   bonusPool?: number; // Размер бонусного пула
-}
-
-export function initSocket(httpServer, path = '/api/socket', cors = {
-  origin: "*",
-  methods: ["GET", "POST"]
-}) 
+} 

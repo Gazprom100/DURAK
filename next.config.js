@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   swcMinify: true,
   images: {
     domains: ['lh3.googleusercontent.com', 'avatars.githubusercontent.com'],
@@ -25,6 +25,8 @@ const nextConfig = {
       fs: false,
       net: false,
       tls: false,
+      redis: false,
+      "@socket.io/redis-adapter": false
     };
     return config;
   },
