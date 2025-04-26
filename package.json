@@ -12,9 +12,9 @@
     "lint": "next lint",
     "postinstall": "npx next build",
     "setup": "bash setup.sh",
-    "init-wallets": "node scripts/init-wallets.js",
-    "check-wallet": "node scripts/check-wallet.js",
-    "fund-pool": "node scripts/fund-pool.js"
+    "init-wallets": "node scripts/init-wallets.cjs",
+    "check-wallet": "node scripts/check-wallet.cjs",
+    "fund-pool": "node scripts/fund-pool.cjs"
   },
   "dependencies": {
     "@types/mongoose": "^5.11.96",
