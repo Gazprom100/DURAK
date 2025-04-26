@@ -6,11 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "tsc && next build",
     "start": "node --experimental-specifier-resolution=node start.js",
     "start:standalone": "node .next/standalone/server.js",
     "lint": "next lint",
-    "postinstall": "next build",
+    "postinstall": "tsc && next build",
     "setup": "bash setup.sh",
     "init-wallets": "node scripts/init-wallets.cjs",
     "check-wallet": "node scripts/check-wallet.cjs",
