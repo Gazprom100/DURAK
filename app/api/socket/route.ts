@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Server as ServerIO } from 'socket.io';
 import { Server as HttpServer } from 'http';
-import { initSocket } from '@/server/socket';
+import { initSocket } from '@/server/socket.js';
 
 // Глобальный объект для хранения инстанса Socket.IO 
 let io: ServerIO | null = null;
@@ -31,15 +31,14 @@ export function initSocketServer(httpServer: HttpServer) {
   if (!io) {
     console.log('Initializing Socket.IO server...');
     try {
-      io = initSocket({
-        httpServer,
-        path: '/api/socket',
-        cors: {
-          origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
-          methods: ['GET', 'POST'],
-          credentials: true,
-        }
-      });
+      // Инициализируем Socket.IO с параметрами
+      const corsOptions = {
+        origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+        methods: ['GET', 'POST'],
+        credentials: true,
+      };
+      
+      io = initSocket(httpServer, '/api/socket', corsOptions);
       console.log('Socket.IO server initialized');
     } catch (error) {
       console.error('Failed to initialize Socket.IO server:', error);
@@ -47,20 +46,6 @@ export function initSocketServer(httpServer: HttpServer) {
   }
   
   return io;
-}
-
-// Обработчики событий Socket.IO
-function setupSocketHandlers(io: ServerIO) {
-  io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
-    
-    // Существующие обработчики из server/socket.ts
-    // будут перенесены сюда при интеграции
-    
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
-    });
-  });
 }
 
 export async function POST(req: NextRequest) {
@@ -71,4 +56,4 @@ export async function POST(req: NextRequest) {
     message: 'Socket connection request received',
     userId: body.userId || 'anonymous' 
   });
-} 
+}

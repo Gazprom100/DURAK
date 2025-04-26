@@ -12,12 +12,35 @@ import {
   getPlayableCards,
   addChatMessage
 } from './gameLogic.js';
+import { Server } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
+import { addPlayerToLobby, removePlayerFromLobby, getLobbyPlayersData, leaveAllGames, checkGame } from './redis.js'; 
+import { GAME_EVENTS, LOBBY_EVENTS } from '@/constants/events.js';
+import { GameManager } from './gameManager.js';
 
 // In-memory store for active games
 const games = {};
 
+/**
+ * Инициализирует Socket.IO сервер
+ */
+export function initSocket(httpServer, path = '/api/socket', cors = {
+  origin: "*",
+  methods: ["GET", "POST"]
+}) {
+  const io = new Server(httpServer, {
+    path,
+    cors
+  });
+  
+  setupSocketHandlers(io);
+  
+  return io;
+}
+
 // Обработчики событий Socket.IO
-export default function setupSocketHandlers(io) {
+export function setupSocketHandlers(io) {
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
 
