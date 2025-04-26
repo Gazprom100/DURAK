@@ -1,77 +1,87 @@
 // Файл server.js для корректного запуска Next.js в режиме standalone с поддержкой Socket.IO
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
+import { createServer } from 'http';
+import { Server as SocketServer } from 'socket.io';
+import { parse } from 'url';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
-// Определяем режим запуска из переменных окружения
-const dev = process.env.NODE_ENV !== 'production';
-const hostname = process.env.HOSTNAME || '0.0.0.0';
-const port = parseInt(process.env.PORT || '10000', 10);
+// Определение __dirname в ESM
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Создаем экземпляр Next.js приложения
-const app = next({ dev, hostname, port });
-const handle = app.getRequestHandler();
+// Получение абсолютного пути к standalone директории
+const standaloneDir = path.join(__dirname, '.next/standalone');
 
-// Подготовка приложения к старту
-app.prepare().then(() => {
-  // Создаем HTTP сервер
-  const httpServer = createServer(async (req, res) => {
-    try {
-      // Разбираем URL запроса
-      const parsedUrl = parse(req.url, true);
-      
-      // Устанавливаем CORS заголовки для безопасности
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-      
-      // Обрабатываем OPTIONS запросы для CORS preflight
-      if (req.method === 'OPTIONS') {
-        res.writeHead(200);
-        res.end();
-        return;
-      }
-      
-      // Передаем запрос обработчику Next.js
-      await handle(req, res, parsedUrl);
-    } catch (err) {
-      console.error('Error occurred handling', req.url, err);
-      res.statusCode = 500;
-      res.end('Internal Server Error');
-    }
-  });
-  
-  // Инициализируем Socket.IO сервер
+// Проверка наличия standalone директории (созданной next build с опцией output: standalone)
+if (!fs.existsSync(standaloneDir)) {
+  console.error('Standalone directory not found. Make sure to build with "output: standalone" option.');
+  process.exit(1);
+}
+
+// Динамический импорт сервера Next.js из standalone директории
+const nextServerPath = path.join(standaloneDir, 'server.js');
+
+async function startServer() {
   try {
-    // Динамически импортируем инициализатор Socket.IO
-    // Это позволяет подключить TypeScript модуль в CommonJS
-    import('./app/api/socket/route.js')
-      .then(({ initSocketServer }) => {
-        if (typeof initSocketServer === 'function') {
-          initSocketServer(httpServer);
-          console.log('Socket.IO server attached to HTTP server');
-        } else {
-          console.error('initSocketServer is not a function');
-        }
-      })
-      .catch(err => {
-        console.error('Failed to initialize Socket.IO server:', err);
-      });
-  } catch (err) {
-    console.error('Error while initializing Socket.IO:', err);
-  }
-  
-  // Запускаем сервер
-  httpServer.listen(port, hostname, (err) => {
-    if (err) throw err;
-    console.log(`> Ready on http://${hostname}:${port}`);
+    // Импортируем next сервер из standalone директории
+    const { default: nextServer } = await import(nextServerPath);
     
-    // Добавляем обработку сигналов для корректного завершения работы
-    ['SIGINT', 'SIGTERM'].forEach((signal) => {
-      process.on(signal, () => {
-        console.log(`> ${signal} signal received, closing server`);
-        process.exit(0);
+    // Определение порта и хоста
+    const port = process.env.PORT || 10000;
+    const hostname = process.env.HOSTNAME || '0.0.0.0';
+    
+    // Создаем HTTP сервер
+    const httpServer = createServer(async (req, res) => {
+      try {
+        // Парсим URL для определения пути
+        const parsedUrl = parse(req.url, true);
+        
+        // Передача запроса Next.js серверу
+        await nextServer(req, res, parsedUrl);
+      } catch (err) {
+        console.error('Error handling request:', err);
+        res.statusCode = 500;
+        res.end('Internal Server Error');
+      }
+    });
+    
+    // Инициализируем Socket.IO
+    const io = new SocketServer(httpServer, {
+      path: '/api/socket',
+      cors: {
+        origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+        methods: ['GET', 'POST'],
+        credentials: true,
+      }
+    });
+    
+    // Настройка базовых обработчиков Socket.IO
+    io.on('connection', (socket) => {
+      console.log('Client connected:', socket.id);
+      
+      socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
       });
     });
-  });
-}); 
+    
+    // Импортируем функции обработки Socket.IO из соответствующего файла
+    try {
+      const socketModule = await import('./server/socket.js');
+      if (typeof socketModule.default === 'function') {
+        socketModule.default(io);
+      }
+    } catch (err) {
+      console.error('Failed to load socket handlers:', err);
+    }
+    
+    // Запускаем сервер
+    httpServer.listen(port, hostname, () => {
+      console.log(`> Ready on http://${hostname}:${port}`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+}
+
+startServer(); 
