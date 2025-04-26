@@ -6,6 +6,10 @@ import { initSocket } from '@/server/socket';
 // Глобальный объект для хранения инстанса Socket.IO 
 let io: ServerIO | null = null;
 
+// Новая схема конфигурации для роута
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 // Для App Router нужно использовать Edge API для WebSockets
 export async function GET() {
   // Возвращаем информацию о статусе сокет-сервера
@@ -58,13 +62,6 @@ function setupSocketHandlers(io: ServerIO) {
     });
   });
 }
-
-// Для обратной совместимости со старым кодом
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
 
 export async function POST(req: NextRequest) {
   const body = await req.json();

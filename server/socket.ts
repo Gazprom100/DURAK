@@ -65,10 +65,10 @@ export const initSocket = (
     // Старый формат - req и res
     const req = reqOrOptions as NextApiRequest;
     
-    if (!(res.socket.server as any).io) {
-      const io = new SocketIOServer(res.socket.server as any);
-      (res.socket.server as any).io = io;
-      
+  if (!(res.socket.server as any).io) {
+    const io = new SocketIOServer(res.socket.server as any);
+    (res.socket.server as any).io = io;
+
       setupSocketHandlers(io);
     }
     
@@ -80,32 +80,32 @@ export const initSocket = (
 
 // Обработчики событий Socket.IO
 function setupSocketHandlers(io: SocketIOServer) {
-  io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
+    io.on('connection', (socket) => {
+      console.log('Client connected:', socket.id);
 
-    // Create a new game
-    socket.on('create-game', (username: string) => {
+      // Create a new game
+      socket.on('create-game', (username: string) => {
       // Используем новую функцию создания игры
       const game = createGame(socket.id, username);
       const gameId = game.id;
       
       // Сохраняем игру
       games[gameId] = game;
-      
-      socket.join(gameId);
+        
+        socket.join(gameId);
       socket.emit('game-created', { gameId, game: sanitizeGame(games[gameId], socket.id) });
-    });
+      });
 
-    // Join an existing game
-    socket.on('join-game', (data: { gameId: string, username: string }) => {
-      const { gameId, username } = data;
-      const playerId = socket.id;
-      
-      if (!games[gameId]) {
-        socket.emit('error', { message: 'Game not found' });
-        return;
-      }
-      
+      // Join an existing game
+      socket.on('join-game', (data: { gameId: string, username: string }) => {
+        const { gameId, username } = data;
+        const playerId = socket.id;
+        
+        if (!games[gameId]) {
+          socket.emit('error', { message: 'Game not found' });
+          return;
+        }
+        
       try {
         // Используем новую функцию добавления игрока
         const updatedGame = addPlayerToGame(games[gameId], playerId, username);
@@ -134,18 +134,18 @@ function setupSocketHandlers(io: SocketIOServer) {
         console.error('Error joining game:', error);
         socket.emit('error', { message: (error as Error).message });
       }
-    });
+      });
 
-    // Play a card
-    socket.on('play-card', (data: { gameId: string, cardId: string }) => {
-      const { gameId, cardId } = data;
-      const playerId = socket.id;
-      
-      if (!games[gameId]) {
-        socket.emit('error', { message: 'Game not found' });
-        return;
-      }
-      
+      // Play a card
+      socket.on('play-card', (data: { gameId: string, cardId: string }) => {
+        const { gameId, cardId } = data;
+        const playerId = socket.id;
+        
+        if (!games[gameId]) {
+          socket.emit('error', { message: 'Game not found' });
+          return;
+        }
+        
       try {
         // Проверяем, можно ли сыграть карту
         if (!canPlayCard(games[gameId], playerId, cardId)) {
@@ -233,18 +233,18 @@ function setupSocketHandlers(io: SocketIOServer) {
         console.error('Error taking cards:', error);
         socket.emit('error', { message: (error as Error).message });
       }
-    });
+      });
 
-    // End turn
-    socket.on('end-turn', (data: { gameId: string }) => {
-      const { gameId } = data;
-      const playerId = socket.id;
-      
-      if (!games[gameId]) {
-        socket.emit('error', { message: 'Game not found' });
-        return;
-      }
-      
+      // End turn
+      socket.on('end-turn', (data: { gameId: string }) => {
+        const { gameId } = data;
+        const playerId = socket.id;
+        
+        if (!games[gameId]) {
+          socket.emit('error', { message: 'Game not found' });
+          return;
+        }
+        
       try {
         // Используем новую функцию завершения хода
         const updatedGame = endTurn(games[gameId], playerId);
@@ -317,22 +317,22 @@ function setupSocketHandlers(io: SocketIOServer) {
       } catch (error) {
         console.error('Error sending message:', error);
         socket.emit('error', { message: (error as Error).message });
-      }
-    });
+        }
+      });
 
-    // Disconnect
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
-      
-      // Update player connection status in any games they're in
-      Object.keys(games).forEach(gameId => {
-        const game = games[gameId];
-        const playerIndex = game.players.findIndex(p => p.id === socket.id);
+      // Disconnect
+      socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
         
-        if (playerIndex !== -1) {
-          // Маркируем игрока как отключенного
-          game.players[playerIndex].isConnected = false;
+        // Update player connection status in any games they're in
+        Object.keys(games).forEach(gameId => {
+          const game = games[gameId];
+          const playerIndex = game.players.findIndex(p => p.id === socket.id);
           
+          if (playerIndex !== -1) {
+          // Маркируем игрока как отключенного
+            game.players[playerIndex].isConnected = false;
+            
           // Уведомляем других игроков
           socket.to(gameId).emit('player-left', { playerId: socket.id });
           
@@ -360,8 +360,8 @@ function setupSocketHandlers(io: SocketIOServer) {
 function sanitizeGame(game: GameState, playerId: string): any {
   const player = game.players.find(p => p.id === playerId);
   const opponent = game.players.find(p => p.id !== playerId);
-  
-  return {
+      
+      return {
     id: game.id,
     status: game.status,
     currentPlayer: game.currentPlayer,
