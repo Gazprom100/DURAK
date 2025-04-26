@@ -34,6 +34,7 @@ const nextConfig = {
   // Внешние серверные пакеты в корректной конфигурации
   experimental: {
     serverComponentsExternalPackages: ['mongoose'],
+    serverActions: true,
   },
   
   // Транспиляция только пакета decimal-js-sdk
@@ -44,6 +45,21 @@ const nextConfig = {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
     HOSTNAME: process.env.HOSTNAME || '0.0.0.0',
     PORT: process.env.PORT || 10000,
+  },
+
+  // Настройки для production
+  async headers() {
+    return [
+      {
+        source: '/api/socket',
+        headers: [
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+        ],
+      },
+    ];
   },
 };
 
