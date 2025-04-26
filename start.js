@@ -1,4 +1,3 @@
-// Файл server.js для корректного запуска Next.js в режиме standalone с поддержкой Socket.IO
 import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';

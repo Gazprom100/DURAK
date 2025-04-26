@@ -33,8 +33,7 @@ const nextConfig = {
   
   // Внешние серверные пакеты в корректной конфигурации
   experimental: {
-    serverComponentsExternalPackages: ['mongoose'],
-    serverActions: true,
+    serverComponentsExternalPackages: ['mongoose']
   },
   
   // Транспиляция только пакета decimal-js-sdk
