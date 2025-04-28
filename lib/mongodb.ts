@@ -10,16 +10,22 @@ async function connectToDatabase() {
   }
 
   try {
-    const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://krasnovinvest:durak-mongodb-password@durak.wphttqm.mongodb.net/durak?retryWrites=true&w=majority';
+    // Использовать готовый URI или собрать из компонентов
+    let MONGODB_URI = process.env.MONGODB_URI;
     
+    // Если URI не задан, собираем его из компонентов
     if (!MONGODB_URI) {
-      throw new Error('Please define the MONGODB_URI environment variable');
+      const username = process.env.MONGODB_USERNAME || 'krasnovinvest';
+      const password = process.env.MONGODB_PASSWORD;
+      const cluster = process.env.MONGODB_CLUSTER || 'durak.wphttqm.mongodb.net';
+      const database = process.env.MONGODB_DATABASE || 'durak';
+      
+      if (!password) {
+        throw new Error('MongoDB password is not defined. Please check your environment variables.');
+      }
+      
+      MONGODB_URI = `mongodb+srv://${username}:${encodeURIComponent(password)}@${cluster}/${database}?retryWrites=true&w=majority`;
     }
-    
-    const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    };
     
     await mongoose.connect(MONGODB_URI);
     isConnected = true;

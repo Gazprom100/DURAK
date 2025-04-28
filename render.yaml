@@ -3,7 +3,7 @@ services:
     name: durak
     env: node
     plan: starter
-    buildCommand: npm install --legacy-peer-deps && npm run build
+    buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /
     previewCommands:
