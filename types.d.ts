@@ -16,7 +16,7 @@ export type Card = {
   id: string;
   suit: CardSuit;
   rank: CardRank;
-  power: number;
+  value: number;
   faceDown?: boolean;
 };
 

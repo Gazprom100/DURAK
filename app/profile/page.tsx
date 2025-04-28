@@ -171,10 +171,10 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 bg-background-darker text-text-light">
-      <motion.div
+          <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5 }}
         className="max-w-5xl mx-auto"
       >
         <div className="mb-10 flex items-center justify-between">
@@ -381,8 +381,8 @@ export default function Profile() {
                   </motion.div>
                 )}
               </div>
-            </div>
-            
+              </div>
+              
             {/* Последние транзакции будут добавлены в реальной имплементации */}
             <div className="card mt-6">
               <div className="p-6">

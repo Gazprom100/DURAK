@@ -3,21 +3,18 @@
   "version": "1.0.0",
   "description": "Modern multiplayer Durak card game",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "tsc && next build",
-    "start": "node --experimental-specifier-resolution=node start.js",
-    "start:standalone": "node .next/standalone/server.js",
+    "build": "next build",
+    "start": "node server.js",
     "lint": "next lint",
-    "postinstall": "tsc && next build",
+    "postinstall": "next build",
     "setup": "bash setup.sh",
-    "init-wallets": "node scripts/init-wallets.cjs",
-    "check-wallet": "node scripts/check-wallet.cjs",
-    "fund-pool": "node scripts/fund-pool.cjs"
+    "init-wallets": "node scripts/init-wallets.js",
+    "check-wallet": "node scripts/check-wallet.js",
+    "fund-pool": "node scripts/fund-pool.js"
   },
   "dependencies": {
-    "@types/mongoose": "^5.11.96",
     "autoprefixer": "^10.4.21",
     "axios": "^1.9.0",
     "crypto-browserify": "^3.12.1",

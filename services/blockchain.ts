@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { connectToDatabase } from '@/lib/db';
+import connectToDatabase from '@/lib/mongodb';
 import { Transaction, UserBonus } from '@/models/Bonus';
 
 // Минимальная награда за победу в игре
@@ -195,5 +195,37 @@ export async function getUserTransactions(userId: string, limit = 10) {
   } catch (error) {
     console.error('Failed to get user transactions:', error);
     throw error;
+  }
+}
+
+// Функция для получения баланса кошелька
+export async function getWalletBalance(address: string): Promise<number> {
+  try {
+    // Здесь должен быть запрос к API блокчейна
+    // Для демонстрации возвращаем рандомный баланс
+    return Math.random() * 100;
+  } catch (error) {
+    console.error('Error fetching wallet balance:', error);
+    return 0;
+  }
+}
+
+// Функция для совершения транзакции
+export async function createTransaction(fromAddress: string, toAddress: string, amount: number): Promise<boolean> {
+  try {
+    // Здесь должна быть логика отправки транзакции в блокчейн
+    // Для демонстрации просто логгируем и возвращаем успех
+    console.log(`Transaction: ${fromAddress} -> ${toAddress}, amount: ${amount}`);
+    
+    // Подключаемся к базе данных
+    await connectToDatabase();
+    
+    // Обновляем информацию о транзакции в базе данных
+    // ... (здесь должен быть код для обновления БД)
+    
+    return true;
+  } catch (error) {
+    console.error('Error creating transaction:', error);
+    return false;
   }
 } 

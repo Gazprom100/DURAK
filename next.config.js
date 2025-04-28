@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   swcMinify: true,
   images: {
     domains: ['lh3.googleusercontent.com', 'avatars.githubusercontent.com'],
@@ -25,19 +25,14 @@ const nextConfig = {
       fs: false,
       net: false,
       tls: false,
-      redis: false,
-      "@socket.io/redis-adapter": false
     };
     return config;
   },
   
-  // Внешние серверные пакеты в корректной конфигурации
-  experimental: {
-    serverComponentsExternalPackages: ['mongoose'],
-    esmExternals: 'loose'
-  },
+  // Серверные пакеты (перемещено из experimental.serverComponentsExternalPackages)
+  serverExternalPackages: ['mongoose'],
   
-  // Транспиляция только пакета decimal-js-sdk
+  // Транспиляция только пакета decimal-js-sdk (ethers перемещен в serverExternalPackages)
   transpilePackages: ['decimal-js-sdk'],
   
   // Устанавливаем переменные окружения для правильного определения хоста
@@ -46,21 +41,6 @@ const nextConfig = {
     HOSTNAME: process.env.HOSTNAME || '0.0.0.0',
     PORT: process.env.PORT || 10000,
   },
-
-  // Настройки для production
-  async headers() {
-    return [
-      {
-        source: '/api/socket',
-        headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
-        ],
-      },
-    ];
-  },
 };
 
-export default nextConfig; 
+module.exports = nextConfig; 

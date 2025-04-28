@@ -1,43 +1,33 @@
 import mongoose from 'mongoose';
 
-// Формат строки подключения: MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/<database>
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/durak';
+// Переменная для отслеживания соединения
+let isConnected = false;
 
-// Кэш для подключения, чтобы не создавать новое соединение при каждом вызове
-let cached = (global as any).mongoose;
-
-if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
-}
-
+// Функция для подключения к MongoDB
 async function connectToDatabase() {
-  if (cached.conn) {
-    return cached.conn;
-  }
-
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    // Настройка mongoose для избежания предупреждений
-    mongoose.set('strictQuery', false);
-
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      console.log('Connected to MongoDB');
-      return mongoose;
-    });
+  if (isConnected) {
+    return;
   }
 
   try {
-    cached.conn = await cached.promise;
-  } catch (e) {
-    cached.promise = null;
-    console.error('Error connecting to MongoDB:', e);
-    throw e;
+    const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://krasnovinvest:durak-mongodb-password@durak.wphttqm.mongodb.net/durak?retryWrites=true&w=majority';
+    
+    if (!MONGODB_URI) {
+      throw new Error('Please define the MONGODB_URI environment variable');
+    }
+    
+    const options = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    };
+    
+    await mongoose.connect(MONGODB_URI);
+    isConnected = true;
+    console.log('MongoDB connected successfully');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
   }
-
-  return cached.conn;
 }
 
 export default connectToDatabase; 
