@@ -24,8 +24,14 @@ app.prepare().then(() => {
     }
   });
 
-  // Инициализируем Socket.IO
-  initSocketServer(server);
+  // Инициализируем Socket.IO с обработкой ошибок
+  try {
+    initSocketServer(server);
+    console.log('Socket.IO initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Socket.IO, continuing without socket support:', error);
+    // Продолжаем работу сервера даже без Socket.IO
+  }
 
   // Запускаем сервер
   server.listen(port, hostname, (err) => {
