@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node server.js",
+    "start": "bash render-start.sh",
     "lint": "next lint",
     "postinstall": "next build",
     "setup": "bash setup.sh",
