@@ -29,10 +29,12 @@ const nextConfig = {
     return config;
   },
   
-  // Серверные пакеты (перемещено из experimental.serverComponentsExternalPackages)
-  serverExternalPackages: ['mongoose'],
+  experimental: {
+    // Серверные пакеты
+    serverComponentsExternalPackages: ['mongoose'],
+  },
   
-  // Транспиляция только пакета decimal-js-sdk (ethers перемещен в serverExternalPackages)
+  // Транспиляция только пакета decimal-js-sdk
   transpilePackages: ['decimal-js-sdk'],
   
   // Устанавливаем переменные окружения для правильного определения хоста
