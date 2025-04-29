@@ -5,7 +5,7 @@ services:
     plan: starter
     buildCommand: npm install && npm run build
     startCommand: bash render-start.sh
-    healthCheckPath: /
+    healthCheckPath: /api/health
     previewCommands:
       - command: npm run build
         type: preview
@@ -21,6 +21,8 @@ services:
         value: 0.0.0.0
       - key: PORT
         value: 10000
+      - key: DISABLE_MONGODB
+        value: true
       - key: NEXTAUTH_URL
         sync: false
       - key: NEXTAUTH_SECRET

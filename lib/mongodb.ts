@@ -5,6 +5,9 @@ let isConnected = false;
 let connectionAttempts = 0;
 const MAX_ATTEMPTS = 5;
 
+// Проверяем, включен ли режим без базы данных
+const DISABLE_MONGODB = process.env.DISABLE_MONGODB === 'true';
+
 // Функция для кодирования специальных символов в пароле
 function encodeMongoPassword(password: string): string {
   // Убираем < и > символы, если они присутствуют
@@ -16,6 +19,13 @@ function encodeMongoPassword(password: string): string {
 
 // Функция для подключения к MongoDB
 async function connectToDatabase() {
+  // Если режим без базы данных включен, просто возвращаемся
+  if (DISABLE_MONGODB) {
+    console.log('MongoDB connections disabled by environment variable. Running in database-less mode.');
+    isConnected = true;
+    return;
+  }
+
   if (isConnected) {
     return;
   }

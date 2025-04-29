@@ -4,8 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
+// Проверяем состояние страницы
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   const [isHovering, setIsHovering] = useState(false);
+  const isDBDisabled = process.env.DISABLE_MONGODB === 'true';
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -255,6 +259,12 @@ export default function Home() {
       >
         <p>© 2023 DURAK - Все права защищены</p>
       </motion.div>
+      
+      {isDBDisabled && (
+        <div className="fixed bottom-0 left-0 w-full bg-yellow-500 text-black p-2 text-center">
+          Режим без базы данных (Отладка)
+        </div>
+      )}
     </div>
   );
 } 
